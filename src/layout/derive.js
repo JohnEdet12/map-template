@@ -9,19 +9,32 @@
 
 import { state } from '../core/store.js';
 import { collectLegend } from '../layers/registry.js';
-import { APP, PAPER_SIZES, ATTRIBUTION_TEXT } from '../core/constants.js';
+import { APP, PAPER_SIZES, attributionFor, basemapSpec } from '../core/constants.js';
 import { formatArea, formatNumber, formatDMS, metresPerPixel, niceScaleBar } from '../core/geo.js';
 
-/** Legend rows for the current document. */
+/**
+ * Legend rows for the current document. `swatch: 'ramp'` is passed through
+ * untouched — the legend element groups consecutive ramp rows into one
+ * gradient bar rather than a column of squares.
+ */
 export function legendRows() {
-  return collectLegend().map(({ label, color, swatch }) => ({
+  return collectLegend().map(({ label, color, swatch, icon, dash, width }) => ({
     label,
     color,
-    swatch: swatch === 'ramp' ? 'polygon' : swatch ?? 'polygon',
+    swatch: swatch ?? 'polygon',
+    // Carried so the printed swatch is the mark the map actually draws —
+    // a cross for hospitals, a dashed rule for a proposed road, a trunk road
+    // heavier than the service road below it.
+    icon: icon ?? '',
+    dash: dash ?? 'solid',
+    ...(width ? { width } : {}),
   }));
 }
 
-/** Study-area / analysis statistics as label → value rows. */
+/**
+ * Study-area and analysis figures as label → value rows.
+ * Analysis tools return their own rows, so this needs no per-tool knowledge.
+ */
 export function statsRows() {
   const rows = [];
   const sa = state.studyArea;
@@ -30,23 +43,14 @@ export function statsRows() {
     rows.push({ label: 'Approx. area', value: formatArea(sa.areaKm2) });
   }
 
-  const dataLayers = state.layers.filter((l) => l.source === 'osm' || l.source === 'upload');
+  const dataLayers = state.layers.filter((l) => l.source === 'osm' || l.source === 'overture' || l.source === 'upload');
   if (dataLayers.length) {
     const total = dataLayers.reduce((sum, l) => sum + (l.meta?.count ?? 0), 0);
     rows.push({ label: 'Mapped features', value: formatNumber(total, 0) });
   }
 
   const run = state.analysisRuns[state.analysisRuns.length - 1];
-  if (run) {
-    const s = run.result.stats ?? {};
-    if (s.classes?.length) {
-      const top = s.classes[0];
-      rows.push({ label: `Largest class`, value: `${top.label} · ${top.share.toFixed(1)}%` });
-    }
-    if (Number.isFinite(s.total)) rows.push({ label: 'Detected extent', value: `${formatNumber(s.total)} km²` });
-    if (Number.isFinite(s.mean)) rows.push({ label: `Mean ${run.job.unit ?? 'value'}`, value: s.mean.toFixed(2) });
-    if (Number.isFinite(s.gained)) rows.push({ label: 'New built-up', value: `${formatNumber(s.gained)} km²` });
-  }
+  for (const row of run?.result?.stats ?? []) rows.push(row);
 
   if (!rows.length) rows.push({ label: 'Study area', value: 'Not set yet', muted: true });
   return rows;
@@ -58,13 +62,25 @@ export function metadataRows() {
   const { center, zoom } = state.mapView;
   const sources = new Set();
   if (state.layers.some((l) => l.source === 'osm' || l.source === 'boundary')) sources.add('OpenStreetMap');
+  // Overture is a conflation, so it earns its own line on the printed map
+  // rather than hiding under the OpenStreetMap credit it partly derives from.
+  if (state.layers.some((l) => l.meta?.merged?.overtureAdded)) sources.add('Overture Maps');
   if (state.layers.some((l) => l.source === 'upload')) sources.add('User data');
-  const run = state.analysisRuns[state.analysisRuns.length - 1];
-  if (run) sources.add(run.result.meta?.synthetic ? 'Demo analysis engine' : 'Google Earth Engine');
-  sources.add('OpenFreeMap basemap');
+  if (state.analysisRuns.length) sources.add('On-device analysis');
+  // Named, not assumed: "OpenFreeMap basemap" was hard-coded here and is wrong
+  // on nine of the twelve basemaps this studio now offers.
+  sources.add(`${basemapSpec(state.basemap).label} basemap`);
+
+  // With several study areas the block names all of them. The title can say
+  // "Lagos and 2 other areas" and still be a title; map information is where
+  // a reader goes to find out which two, and it has to answer.
+  const parts = state.studyArea?.parts ?? [];
 
   return [
     { label: 'Prepared by', value: APP.org },
+    ...(parts.length > 1
+      ? [{ label: 'Study areas', value: parts.map((p) => p.name).join(', ') }]
+      : []),
     { label: 'Date', value: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) },
     { label: 'Projection', value: 'WGS 84 / Web Mercator (EPSG:3857)' },
     { label: 'Centre', value: `${formatDMS(center[1], 'lat')}, ${formatDMS(center[0], 'lng')}` },
@@ -74,11 +90,21 @@ export function metadataRows() {
   ];
 }
 
-/** Attribution line, including any synthetic-data warning. */
+/** Attribution line, plus a note on any assumption-based analysis. */
 export function creditsText() {
-  const parts = [ATTRIBUTION_TEXT];
-  if (state.analysisRuns.some((r) => r.result.meta?.synthetic)) {
-    parts.push('Analysis layers shown here are synthetic demonstration data, not a validated assessment.');
+  // The basemap names itself: these are no longer all OpenStreetMap, and a
+  // satellite map crediting OpenFreeMap is a false statement on a printed page.
+  const parts = [attributionFor(state.basemap)];
+  // Only credited when Overture actually contributed features — a map whose
+  // layers came back entirely from OpenStreetMap should not claim otherwise.
+  if (state.layers.some((l) => l.meta?.merged?.overtureAdded)) {
+    parts.push('Overture Maps data © Overture Maps Foundation, from OpenStreetMap (ODbL), Google Open Buildings, Microsoft and Esri.');
+  }
+  if (state.analysisRuns.some((r) => r.result.toolId === 'volume')) {
+    parts.push('Volume figures are area × assumed depth — a planning estimate, not a surveyed volume.');
+  }
+  if (state.analysisRuns.some((r) => r.result.toolId === 'nearest')) {
+    parts.push('Distances are straight-line, not measured along roads.');
   }
   return parts.join(' ');
 }

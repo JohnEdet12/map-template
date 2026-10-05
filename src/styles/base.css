@@ -3,34 +3,124 @@
 @tailwind utilities;
 
 /* ------------------------------------------------------------------
-   Design tokens — carried over from the Flood Watch / nigeria-flood
-   design system: sky + slate, glass surfaces, Source Sans 3 + Fraunces.
+   Design tokens.
+
+   Every colour in the app resolves through one of these, which is what
+   makes the dark theme a token swap rather than a second stylesheet.
+   `data-theme` on <html> wins; with no explicit choice we follow the
+   operating system.
    ------------------------------------------------------------------ */
 :root {
   --ink: #0f172a;
   --ink-soft: #475569;
   --ink-faint: #94a3b8;
-  --river: #0369a1;
-  --river-deep: #075985;
-  --river-light: #38bdf8;
-  --mist: #e0f2fe;
+
+  --accent: #0369a1;
+  --accent-deep: #075985;
+  --accent-bright: #38bdf8;
+  --accent-soft: #bae6fd;
+  --accent-wash: #e0f2fe;
+  --accent-ink: #ffffff;
+
+  --surface: #ffffff;          /* panels, cards, header */
+  --surface-2: #f8fafc;        /* inset fields, hover fills */
+  --canvas: #f8fafc;           /* app background */
+  --canvas-deep: #eef2f6;      /* behind the artboard */
+
   --line: #e2e8f0;
   --line-soft: #f1f5f9;
-  --surface: #ffffff;
-  --canvas: #f8fafc;
+  --line-strong: #cbd5e1;
+
   --leaf: #0f766e;
   --ember: #ea580c;
+  --danger: #b91c1c;
+  --warn-bg: #fffbeb;
+  --warn-ink: #92400e;
+
+  --glass: rgba(255, 255, 255, 0.92);
+  --scrim: rgba(15, 23, 42, 0.13);
+  --shadow-tint: 15, 23, 42;
 
   --radius-sm: 8px;
   --radius: 12px;
   --radius-lg: 18px;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
-  --shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.18);
+  --shadow-sm: 0 1px 2px rgba(var(--shadow-tint), 0.05);
+  --shadow: 0 8px 24px rgba(var(--shadow-tint), 0.12);
+  --shadow-lg: 0 24px 60px rgba(var(--shadow-tint), 0.18);
 
   --header-h: 52px;
   --rail-w: 74px;
   --panel-w: 288px;
+
+  color-scheme: light;
+}
+
+/* Dark — same roles, different values. Nothing else in the app changes. */
+:root[data-theme='dark'] {
+  --ink: #e6edf6;
+  --ink-soft: #a4b2c6;
+  --ink-faint: #6b7c93;
+
+  --accent: #38bdf8;
+  --accent-deep: #7dd3fc;
+  --accent-bright: #7dd3fc;
+  --accent-soft: #1e3a5f;
+  --accent-wash: #16283d;
+  --accent-ink: #06131f;
+
+  --surface: #131c28;
+  --surface-2: #1a2532;
+  --canvas: #0b1219;
+  --canvas-deep: #070c11;
+
+  --line: #26333f;
+  --line-soft: #1b2531;
+  --line-strong: #33445a;
+
+  --leaf: #2dd4bf;
+  --ember: #fb923c;
+  --danger: #f87171;
+  --warn-bg: #2b2213;
+  --warn-ink: #fcd34d;
+
+  --glass: rgba(19, 28, 40, 0.92);
+  --scrim: rgba(0, 0, 0, 0.45);
+  --shadow-tint: 0, 0, 0;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.6);
+
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --ink: #e6edf6;
+    --ink-soft: #a4b2c6;
+    --ink-faint: #6b7c93;
+    --accent: #38bdf8;
+    --accent-deep: #7dd3fc;
+    --accent-bright: #7dd3fc;
+    --accent-soft: #1e3a5f;
+    --accent-wash: #16283d;
+    --accent-ink: #06131f;
+    --surface: #131c28;
+    --surface-2: #1a2532;
+    --canvas: #0b1219;
+    --canvas-deep: #070c11;
+    --line: #26333f;
+    --line-soft: #1b2531;
+    --line-strong: #33445a;
+    --leaf: #2dd4bf;
+    --ember: #fb923c;
+    --danger: #f87171;
+    --warn-bg: #2b2213;
+    --warn-ink: #fcd34d;
+    --glass: rgba(19, 28, 40, 0.92);
+    --scrim: rgba(0, 0, 0, 0.45);
+    --shadow-tint: 0, 0, 0;
+    color-scheme: dark;
+  }
 }
 
 @layer base {
@@ -40,46 +130,102 @@
     background: var(--canvas);
     color: var(--ink);
     overflow: hidden;
+    transition: background 0.2s ease, color 0.2s ease;
   }
   .font-display { font-family: 'Fraunces', Georgia, serif; }
   .font-mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  ::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }
 
   [hidden], .is-hidden { display: none !important; }
 }
 
-@layer components {
-  .btn-primary {
-    @apply rounded-lg bg-sky-700 px-3 py-1.5 text-[12px] font-semibold text-white transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-50;
-  }
-  .btn-ghost {
-    @apply rounded-lg border border-slate-300 px-3 py-1.5 text-[12px] font-semibold text-slate-600 transition hover:border-slate-400 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-50;
-  }
-  .btn-soft {
-    @apply rounded-lg bg-sky-50 px-3 py-1.5 text-[12px] font-semibold text-sky-800 transition hover:bg-sky-100;
-  }
-  .icon-btn {
-    @apply grid h-8 w-8 place-items-center rounded-lg border border-transparent text-[15px] text-slate-500 transition hover:border-slate-200 hover:bg-slate-50 hover:text-slate-800 disabled:opacity-35 disabled:hover:border-transparent disabled:hover:bg-transparent;
-  }
-  .field {
-    @apply w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[12px] text-slate-800 outline-none transition focus:border-sky-300 focus:bg-white focus:ring-2 focus:ring-sky-100;
-  }
-  .field-label {
-    @apply mb-1 block text-[11px] font-semibold text-slate-500;
-  }
-  .panel-title {
-    @apply text-[11px] font-extrabold uppercase tracking-[0.09em] text-slate-500;
-  }
-  .card {
-    @apply rounded-xl border border-slate-200 bg-white;
-  }
-  .chip {
-    @apply inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold text-slate-600;
-  }
+/* ------------------------------------------------------------------
+   Components — written in plain CSS against the tokens rather than
+   @apply, so they follow the theme. Tailwind utilities remain available
+   for one-off layout in markup.
+   ------------------------------------------------------------------ */
+.btn-primary,
+.btn-ghost,
+.btn-soft {
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  border: 1px solid transparent;
+  line-height: 1.35;
+}
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
+.btn-primary:hover { background: var(--accent-deep); }
+.btn-ghost { background: transparent; border-color: var(--line-strong); color: var(--ink-soft); }
+.btn-ghost:hover { border-color: var(--ink-faint); color: var(--ink); }
+.btn-soft { background: var(--accent-wash); color: var(--accent-deep); }
+.btn-soft:hover { background: var(--accent-soft); }
+.btn-primary:disabled, .btn-ghost:disabled, .btn-soft:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.icon-btn {
+  display: grid; place-items: center;
+  height: 32px; width: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.icon-btn:hover { border-color: var(--line); background: var(--surface-2); color: var(--ink); }
+.icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.icon-btn:disabled:hover { border-color: transparent; background: transparent; }
+
+.field {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.field:focus { border-color: var(--accent-bright); background: var(--surface); box-shadow: 0 0 0 2px var(--accent-wash); }
+.field option { background: var(--surface); color: var(--ink); }
+
+.field-label {
+  margin-bottom: 4px;
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.panel-title {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink-faint);
+}
+.card {
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
 }
 
 /* Toasts ---------------------------------------------------------- */
@@ -97,6 +243,7 @@
   display: flex; gap: 9px; align-items: flex-start;
   animation: toast-in 0.18s ease-out;
 }
+:root[data-theme='dark'] .toast { background: #1e293b; border: 1px solid #334155; }
 .toast--ok    { background: #0f766e; }
 .toast--warn  { background: #b45309; }
 .toast--error { background: #b91c1c; }
@@ -110,14 +257,14 @@
   border: 2px solid rgba(255, 255, 255, 0.35); border-top-color: #fff;
   animation: spin 0.7s linear infinite;
 }
-.spinner--ink { border-color: rgba(15, 23, 42, 0.18); border-top-color: var(--river); }
+.spinner--ink { border-color: var(--line); border-top-color: var(--accent); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* MapLibre tweaks ------------------------------------------------- */
 .maplibregl-ctrl-group {
   border-radius: 10px !important;
   overflow: hidden;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14) !important;
+  box-shadow: 0 4px 14px rgba(var(--shadow-tint), 0.24) !important;
 }
 .maplibregl-ctrl-attrib { font-size: 10px !important; }
 .maplibregl-ctrl-bottom-right { z-index: 5; }

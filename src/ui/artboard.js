@@ -9,7 +9,7 @@
 
 import { $, el } from '../core/dom.js';
 import { state, set, touch, checkpoint } from '../core/store.js';
-import { PAPER_SIZES } from '../core/constants.js';
+import { PAPER_SIZES, paperDimsLabel } from '../core/constants.js';
 import { renderElementDom, elementLabel } from '../layout/elements.js';
 import { currentMetresPerPixel } from '../layout/derive.js';
 
@@ -52,6 +52,22 @@ const unit = () => {
   return (pt) => (pt ?? 0) * 0.001 * w;
 };
 
+/**
+ * Screen pixels per millimetre of printed page.
+ *
+ * The bridge between a line weight the user states in millimetres and the
+ * pixels MapLibre paints in. It moves whenever the paper size or the window
+ * does, which is why layers/render.js re-syncs on both — a stored 0.5 mm has
+ * to keep meaning 0.5 mm of paper, not the pixel count it happened to be when
+ * the window was that wide.
+ */
+export function pagePxPerMm() {
+  const w = artboard?.offsetWidth;
+  if (!w) return 3.3;
+  const { wIn } = paperDims();
+  return w / (wIn * 25.4);
+}
+
 /** Size and centre the page over the map. */
 export function layoutArtboard() {
   if (!artboard || !wrap) return;
@@ -70,7 +86,8 @@ export function layoutArtboard() {
   artboard.style.top = `${Math.round((wrap.clientHeight - h) / 2)}px`;
 
   if (label) {
-    label.textContent = `${paperLabel} ${orientation} · ${wIn.toFixed(1)} × ${hIn.toFixed(1)} in · ${state.page.dpi} dpi`;
+    const paper = PAPER_SIZES[state.page.size] ?? PAPER_SIZES.a4;
+    label.textContent = `${paperLabel} ${orientation} · ${paperDimsLabel(paper, orientation === 'portrait')} · ${state.page.dpi} dpi`;
   }
 }
 

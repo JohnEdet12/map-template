@@ -10,9 +10,13 @@ import { TEMPLATE_CATEGORIES, templatesInCategory, templateById } from '../../te
 import { applyTemplate } from '../../templates/apply.js';
 import { templatePreview } from '../preview.js';
 import { head, section, pillRow, seg, checkRow, button, stack, labelled, select } from '../controls.js';
-import { PAPER_SIZES, MAP_LOOKS, MAP_TEXTURES, BASEMAPS } from '../../core/constants.js';
+import {
+  PAPER_SIZES, MAP_LOOKS, MAP_TEXTURES, paperDimsLabel,
+  EXPORT_RESOLUTIONS, effectiveDpi, basemapOptions, basemapSpec, isVectorBasemap,
+} from '../../core/constants.js';
 import { applyLook, setBasemap, applyBasemapGroups, applyTerrain, applyBuildingExtrusion, resizeSoon } from '../../core/map.js';
-import { layoutArtboard, renderElements, hint } from '../artboard.js';
+import { layoutArtboard, renderElements, hint, paperDims } from '../artboard.js';
+import { formatNumber } from '../../core/geo.js';
 
 let filterCategory = 'all';
 let pane;
@@ -48,6 +52,7 @@ export function renderTemplatesPane() {
     head('Templates', 'Start from a finished design, then change anything you like.'),
     pillRow(TEMPLATE_CATEGORIES, filterCategory, (id) => { filterCategory = id; renderTemplatesPane(); }),
     grid,
+    section('Basemap', basemapControls()),
     section('Page', pageControls()),
     section('Map look', lookControls()),
   ]);
@@ -67,7 +72,7 @@ function pageControls() {
 
   return stack([
     labelled('Paper size', select(
-      Object.entries(PAPER_SIZES).map(([value, p]) => ({ value, label: `${p.label} · ${p.wIn}″ × ${p.hIn}″` })),
+      Object.entries(PAPER_SIZES).map(([value, p]) => ({ value, label: `${p.label} · ${paperDimsLabel(p)}` })),
       state.page.size,
       (value) => update({ size: value }),
     )),
@@ -76,11 +81,81 @@ function pageControls() {
       fixed ? paper.fixedOrientation : state.page.orientation,
       (value) => update({ orientation: value }),
     ), fixed ? `${paper.label} is always ${paper.fixedOrientation}.` : ''),
-    labelled('Export quality', seg(
-      [{ value: 96, label: 'Screen' }, { value: 150, label: 'Standard' }, { value: 300, label: 'Print' }],
+    labelled('Export resolution', select(
+      EXPORT_RESOLUTIONS.map((r) => ({ value: r.dpi, label: `${r.label} · ${r.dpi} dpi` })),
       state.page.dpi,
       (value) => update({ dpi: Number(value) }),
-    ), `${state.page.dpi} dots per inch`),
+    ), resolutionNote()),
+  ]);
+}
+
+/**
+ * What this resolution will actually produce, on this paper, in this browser.
+ *
+ * Said before the export rather than after it, because the two things people
+ * get wrong here are both expensive: asking for 600 dpi on A0, where no
+ * browser can allocate the canvas, and asking for 96 on something destined for
+ * a printer.
+ */
+function resolutionNote() {
+  const asked = Number(state.page.dpi) || 150;
+  const { wIn, hIn } = paperDims();
+  const real = effectiveDpi(wIn, hIn, asked);
+  const W = Math.round(wIn * real);
+  const H = Math.round(hIn * real);
+  const size = `${formatNumber(W, 0)} × ${formatNumber(H, 0)} px`;
+  const hint = EXPORT_RESOLUTIONS.find((r) => r.dpi === asked)?.hint ?? '';
+
+  if (real < asked) {
+    return `${PAPER_SIZES[state.page.size]?.label ?? 'This size'} is too big for ${asked} dpi in a browser — the export will be ${real} dpi (${size}).`;
+  }
+  return `${size}${hint ? ` · ${hint}` : ''}`;
+}
+
+/* ------------------------------------------------------------------ */
+/* basemap                                                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The ground the map is drawn on, as a section of its own.
+ *
+ * It used to be one line inside "Map look", between a filter and a paper
+ * texture, which is the wrong company: a filter is a finish, and the basemap
+ * is the largest single decision about what the map shows. Satellite imagery
+ * in particular is what most people are looking for when they open a
+ * cartography tool and cannot find it.
+ */
+function basemapControls() {
+  const spec = basemapSpec(state.basemap);
+  const vector = isVectorBasemap(state.basemap);
+
+  const toggles = Object.entries(state.basemapGroups).map(([key, on]) =>
+    checkRow(groupLabel(key), on, (value) => {
+      set({ basemapGroups: { ...state.basemapGroups, [key]: value } }, { history: false });
+      applyBasemapGroups(state.basemapGroups);
+    }));
+
+  return stack([
+    labelled('Basemap', select(
+      basemapOptions().map((o) => ({ value: o.value, label: o.label, group: o.group })),
+      state.basemap,
+      (value) => { setBasemap(value); renderTemplatesPane(); },
+    ), spec.hint),
+
+    // The credit changes with the basemap and prints on the map, so it is
+    // shown here rather than discovered at export time.
+    el('p', {
+      style: { margin: 0, fontSize: '10px', color: 'var(--ink-faint)', lineHeight: '1.45' },
+      text: spec.attribution,
+    }),
+
+    el('div.panel-title', { text: 'Basemap layers', style: { marginTop: '4px' } }),
+    vector
+      ? stack(toggles, '2px')
+      : el('p', {
+          style: { margin: 0, fontSize: '10.5px', color: 'var(--ink-faint)', lineHeight: '1.45' },
+          html: `<b>${spec.label}</b> arrives as finished pictures, so its roads, labels and water cannot be switched off individually — they are painted into the tiles. Choose a <b>Vector</b> basemap to get those toggles back.`,
+        }),
   ]);
 }
 
@@ -94,16 +169,11 @@ function lookControls() {
   };
 
   return stack([
-    labelled('Basemap', select(
-      Object.entries(BASEMAPS).map(([value, b]) => ({ value, label: `${b.label} — ${b.hint}` })),
-      state.basemap,
-      (value) => { setBasemap(value); renderTemplatesPane(); },
-    )),
     labelled('Filter', select(
       Object.entries(MAP_LOOKS).map(([value, l]) => ({ value, label: l.label })),
       look.filter,
       (value) => setLook({ filter: value }),
-    )),
+    ), hueSafe(look.filter) ? '' : 'Heads up: this filter recolours your data and analysis layers too, so they will no longer match their legend.'),
     labelled('Paper texture', select(
       Object.entries(MAP_TEXTURES).map(([value, t]) => ({ value, label: t.label })),
       look.texture,
@@ -135,6 +205,14 @@ function lookControls() {
     }, 'ghost', { style: { width: '100%' } }),
   ]);
 }
+
+/**
+ * The look is a CSS filter over the whole map canvas, overlays included.
+ * These leave hues alone; the rest genuinely restyle the data as well.
+ */
+const HUE_SAFE = new Set(['none', 'soft', 'vivid']);
+const hueSafe = (filter) => HUE_SAFE.has(filter)
+  || !state.layers.some((l) => l.source === 'analysis' || l.source === 'osm' || l.source === 'overture');
 
 /** Vignette drags should not rebuild the panel on every frame. */
 function setLookQuiet(patch) {

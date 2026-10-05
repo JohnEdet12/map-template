@@ -1,0 +1,15 @@
+# The image carries the server and the catalogue, nothing else.
+node_modules
+dist
+.git
+.vite
+*.log
+
+# Data is mounted or imported at runtime — never baked in by accident. The
+# Nigeria extract alone is 700 MB, and copying it into a build context would
+# make every image build crawl.
+server/data
+
+legacy
+src/assets
+.claude

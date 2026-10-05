@@ -7,17 +7,29 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "cache": "node server/cache-server.mjs",
+    "prefetch": "node server/prefetch.mjs",
+    "import": "node --max-old-space-size=8192 server/import-pbf.mjs",
+    "ai": "node server/ai-backend.mjs"
   },
   "dependencies": {
+    "@mapbox/vector-tile": "^3.0.0",
     "@tmcw/togeojson": "^5.8.1",
     "@turf/area": "^7.1.0",
     "@turf/bbox": "^7.1.0",
     "@turf/buffer": "^7.1.0",
     "@turf/centroid": "^7.1.0",
+    "@turf/distance": "^7.4.0",
+    "@turf/intersect": "^7.4.0",
+    "@turf/length": "^7.4.0",
+    "@turf/union": "^7.4.0",
     "jspdf": "^2.5.2",
     "maplibre-gl": "^4.7.1",
+    "osm-pbf-parser-node": "^1.1.4",
     "osmtogeojson": "^3.0.0-beta.5",
+    "pbf": "^5.1.2",
+    "pmtiles": "^4.5.0",
     "shpjs": "^6.1.0"
   },
   "devDependencies": {
@@ -25,5 +37,8 @@
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "vite": "^6.0.7"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "^0.115.0"
   }
 }

@@ -80,7 +80,14 @@ export async function lookupBoundary(opts) {
     bbox: feature.bbox ?? bboxOf(geojson),
     areaKm2: areaKm2(geojson),
     center: centroidOf(geojson),
+    // Carried so the locator inset knows which country to draw this inside
+    // without having to guess it back out of the display name.
+    countryCode: opts.countryCode || '',
     osmType: feature.properties?.osm_type ?? 'relation',
+    // OpenStreetMap's own id for the boundary, which is what tells two study
+    // areas apart when a map has several. Two places can share a name — Niger
+    // the state and Niger the country — and nothing else here is unique.
+    osmId: feature.properties?.osm_id ?? null,
   };
 
   cache.set(key, result);

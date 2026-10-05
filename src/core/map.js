@@ -12,7 +12,7 @@
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import { BASEMAPS, BASEMAP_GROUPS, MAP_LOOKS, TERRAIN_SOURCE } from './constants.js';
+import { BASEMAPS, BASEMAP_GROUPS, MAP_LOOKS, TERRAIN_SOURCE, basemapSpec } from './constants.js';
 import { state, set } from './store.js';
 import { debounce } from './dom.js';
 
@@ -36,6 +36,52 @@ function fireStyleReady() {
 }
 
 /* ------------------------------------------------------------------ */
+/* basemap styles                                                      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Glyphs for a style that has none of its own.
+ *
+ * A raster basemap is images, so it ships no font endpoint — but our overlay
+ * label layers ask for one, and a symbol layer that cannot get its glyphs
+ * fails the whole tile and takes the lines and fills of the same source down
+ * with it. Silently: right paint, right data, nothing drawn. So a generated
+ * style borrows OpenFreeMap's font server even when none of its pictures come
+ * from there.
+ */
+const GLYPHS = 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf';
+
+/**
+ * A complete MapLibre style around one or more raster tile sets.
+ *
+ * Several, in order, is how "satellite with labels" works: imagery underneath
+ * and a transparent reference overlay of names and roads on top, which is the
+ * only way to label imagery without a vector style to borrow labels from.
+ */
+function rasterStyle(spec) {
+  const sources = {};
+  const layers = [];
+  spec.rasters.forEach((r, i) => {
+    const id = `gds-basemap-${i}`;
+    sources[id] = {
+      type: 'raster',
+      tiles: r.tiles,
+      tileSize: r.tileSize ?? 256,
+      maxzoom: r.maxzoom ?? 19,
+      attribution: spec.attribution,
+    };
+    layers.push({ id, type: 'raster', source: id, paint: { 'raster-opacity': 1 } });
+  });
+  return { version: 8, glyphs: GLYPHS, sources, layers };
+}
+
+/** What to hand `setStyle` for a basemap key: a URL, or a built style. */
+export function styleFor(key) {
+  const spec = basemapSpec(key);
+  return spec.type === 'raster' ? rasterStyle(spec) : spec.url;
+}
+
+/* ------------------------------------------------------------------ */
 /* init                                                                */
 /* ------------------------------------------------------------------ */
 export function initMap(container = 'map') {
@@ -43,7 +89,7 @@ export function initMap(container = 'map') {
 
   map = new maplibregl.Map({
     container,
-    style: BASEMAPS[state.basemap].url,
+    style: styleFor(state.basemap),
     center: state.mapView.center,
     zoom: state.mapView.zoom,
     pitch: state.mapView.pitch,
@@ -74,6 +120,8 @@ export function initMap(container = 'map') {
   map.on('rotateend', syncView);
 
   applyLook(state.mapLook);
+  // Dev-only handle so the live style can be inspected from the console.
+  if (import.meta.env?.DEV) window.__map = map;
   return map;
 }
 
@@ -83,12 +131,16 @@ export function initMap(container = 'map') {
 export function setBasemap(key) {
   if (!map || !BASEMAPS[key]) return;
   set({ basemap: key }, { history: false });
-  map.setStyle(BASEMAPS[key].url);   // 'style.load' re-adds everything
+  map.setStyle(styleFor(key));       // 'style.load' re-adds everything
 }
 
 /**
  * Hide/show whole families of basemap layers by matching their layer ids.
  * Users see "Roads & streets", not `transportation_name_ref`.
+ *
+ * A raster basemap has one layer holding a picture of everything, so there is
+ * nothing here to switch off. The panel says so rather than offering toggles
+ * that do nothing.
  */
 export function applyBasemapGroups(groups) {
   if (!map || !map.getStyle()) return;

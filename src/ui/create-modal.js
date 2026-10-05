@@ -17,13 +17,13 @@ const CHOICES = [
     open: (api) => api.openStudio({ templateId: 'quiet-canvas', tool: 'area' }),
   },
   {
-    icon: '▩', title: 'Land cover analysis',
-    body: 'Classify what your study area is actually covered by.',
-    open: (api) => api.openStudio({ templateId: 'land-cover', tool: 'analysis' }),
+    icon: '▩', title: 'Thematic map',
+    body: 'Show districts, land use or facilities coloured by category.',
+    open: (api) => api.openStudio({ templateId: 'land-cover', tool: 'data' }),
   },
   {
-    icon: '≋', title: 'Hazard or flood map',
-    body: 'Flood extent, oil spill or erosion risk over a dark basemap.',
+    icon: '≋', title: 'Hazard or impact map',
+    body: 'Draw buffer zones around rivers or infrastructure at risk.',
     open: (api) => api.openStudio({ templateId: 'oil-spill', tool: 'analysis' }),
   },
   {
@@ -53,12 +53,12 @@ export function openCreateModal(api) {
     el('h2#create-title', { text: 'Create a new map', style: { margin: 0, fontSize: '26px', letterSpacing: '-0.025em' } }),
     el('p', {
       text: 'Pick a starting point — you can change everything afterwards.',
-      style: { margin: '6px 0 0', color: '#64748b', fontSize: '14px' },
+      style: { margin: '6px 0 0', color: 'var(--ink-soft)', fontSize: '14px' },
     }),
     el('div.create-grid', {}, CHOICES.map((choice) => {
       const card = el('button.create-choice', { type: 'button' }, [
-        el('span', { text: choice.icon }),
-        el('span', {}, [
+        el('span.choice-ico', { text: choice.icon }),
+        el('span.choice-text', {}, [
           el('strong', { text: choice.title }),
           el('small', { text: choice.body }),
         ]),

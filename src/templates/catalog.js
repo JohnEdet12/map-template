@@ -21,6 +21,7 @@ export const TEMPLATE_CATEGORIES = [
   { id: 'topographic',  label: 'Topographic' },
   { id: 'three-d',      label: '3-D' },
   { id: 'editorial',    label: 'Editorial' },
+  { id: 'geoinfotech',  label: 'GIS department' },
 ];
 
 const ALL_ON = { roads: true, water: true, buildings: true, boundaries: true, labels: true, landcover: true };
@@ -49,7 +50,7 @@ const E = (type, x, y, w, h, extra = {}) => ({ type, x, y, w, h, ...extra });
  * @property {object} [camera]      { pitch, bearing }
  * @property {boolean} [terrain]
  * @property {boolean} [buildings3d]
- * @property {object} [suggest]     { job, datasets } — what this style is for
+ * @property {object} [suggest]     { tool, datasets } — what this style is for
  * @property {object[]} elements
  */
 
@@ -138,13 +139,15 @@ export const TEMPLATES = [
     tags: ['Dark', 'Screen'],
     preview: ['label', 'north', 'scale'],
     basemap: 'liberty',
-    look: { filter: 'night', texture: 'none', vignette: 0.35 },
+    // See the note on "Incident Watch": analysis-carrying templates keep a
+    // hue-preserving filter so results stay the colour of their legend.
+    look: { filter: 'soft', texture: 'none', vignette: 0.42 },
     groups: QUIET,
     page: { size: 'slide', orientation: 'landscape' },
-    suggest: { job: 'flood-extent', datasets: ['rivers', 'settlements'] },
+    suggest: { tool: 'buffer', datasets: ['rivers', 'settlements'] },
     elements: [
-      E('title', 4, 6, 46, 9, { text: 'Situation Overview', style: { color: '#f8fafc', size: 30, weight: 700 } }),
-      E('subtitle', 4, 15.5, 46, 5, { text: 'Live monitoring extract', style: { color: '#93c5fd', size: 13 } }),
+      E('title', 4, 6, 46, 9, { text: 'Situation Overview', style: { color: '#0f172a', size: 30, weight: 700 } }),
+      E('subtitle', 4, 15.5, 46, 5, { text: 'Live monitoring extract', style: { color: '#0369a1', size: 13 } }),
       E('stats', 4, 60, 26, 32, {
         text: 'Key figures',
         style: { bg: '#0f172a', bgOpacity: 0.82, border: '#334155', borderWidth: 1, color: '#e2e8f0', radius: 10, size: 11 },
@@ -153,9 +156,9 @@ export const TEMPLATES = [
         text: 'Legend',
         style: { bg: '#0f172a', bgOpacity: 0.82, border: '#334155', borderWidth: 1, color: '#e2e8f0', radius: 10, size: 11 },
       }),
-      E('north', 92, 6, 5, 8, { style: { color: '#e2e8f0', variant: 'compass' } }),
-      E('scale', 82, 90, 15, 5, { style: { color: '#e2e8f0' } }),
-      E('credits', 4, 94.5, 76, 3, { style: { color: '#94a3b8', size: 7 } }),
+      E('north', 92, 6, 5, 8, { style: { color: '#0f172a', variant: 'compass' } }),
+      E('scale', 82, 90, 15, 5, { style: { color: '#0f172a' } }),
+      E('credits', 4, 94.5, 76, 3, { style: { color: '#475569', size: 7 } }),
     ],
   },
 
@@ -281,7 +284,7 @@ export const TEMPLATES = [
     terrain: true,
     camera: { pitch: 0, bearing: 0 },
     page: { size: 'a3', orientation: 'landscape' },
-    suggest: { job: 'lulc', datasets: ['forests', 'rivers', 'protected'] },
+    suggest: { tool: 'area', datasets: ['forests', 'rivers', 'protected'] },
     elements: [
       E('title', 5, 5, 50, 7, { text: 'Relief and Habitat', style: { size: 28, weight: 700 } }),
       E('subtitle', 5, 12, 50, 4, { text: 'Terrain, water and vegetation cover' }),
@@ -305,7 +308,7 @@ export const TEMPLATES = [
     groups: BARE,
     terrain: true,
     page: { size: 'a2', orientation: 'portrait' },
-    suggest: { job: 'lulc' },
+    suggest: { tool: 'area' },
     elements: [
       E('title', 8, 76, 62, 9, { text: 'Elevation', style: { font: 'display', size: 52, weight: 700 } }),
       E('subtitle', 8, 86, 62, 4.5, { text: 'Height above sea level', style: { size: 14, color: '#475569' } }),
@@ -331,7 +334,7 @@ export const TEMPLATES = [
     groups: QUIET,
     terrain: true,
     page: { size: 'a3', orientation: 'landscape' },
-    suggest: { job: 'ndvi', datasets: ['forests', 'farmland'] },
+    suggest: { tool: 'length', datasets: ['forests', 'farmland'] },
     elements: [
       E('title', 4.5, 6, 26, 9, { text: 'Highland Story', style: { font: 'display', size: 30, weight: 600 } }),
       E('subtitle', 4.5, 15.5, 26, 6, { text: 'Terrain, farming and forest cover across the uplands', style: { size: 12, lineHeight: 1.4 } }),
@@ -361,7 +364,7 @@ export const TEMPLATES = [
     terrain: true,
     camera: { pitch: 62, bearing: -22 },
     page: { size: 'slide', orientation: 'landscape' },
-    suggest: { job: 'ndvi' },
+    suggest: { tool: 'hotspot' },
     elements: [
       E('title', 4, 74, 52, 9, { text: 'Terrain Perspective', style: { font: 'display', size: 32, weight: 600, color: '#0f172a' } }),
       E('subtitle', 4, 84, 52, 5, { text: 'Vertical exaggeration ×1.4', style: { size: 12, color: '#334155' } }),
@@ -388,7 +391,7 @@ export const TEMPLATES = [
     buildings3d: true,
     camera: { pitch: 58, bearing: -18 },
     page: { size: 'a4', orientation: 'landscape' },
-    suggest: { job: 'built-up', datasets: ['buildings', 'roads-major'] },
+    suggest: { tool: 'count-in', datasets: ['buildings', 'roads-major'] },
     elements: [
       E('title', 5, 7, 48, 8, { text: 'City in Three Dimensions', style: { size: 27, weight: 700 } }),
       E('subtitle', 5, 15, 48, 4.5, { text: 'Building heights from OpenStreetMap', style: { size: 12 } }),
@@ -403,21 +406,21 @@ export const TEMPLATES = [
   /* ================= ANALYSIS ===================================== */
   {
     id: 'land-cover',
-    name: 'Land Cover',
+    name: 'Thematic Zones',
     category: 'analysis',
-    blurb: 'Built for a classified result: big legend, class shares, clean base.',
-    tags: ['LULC', 'Classes'],
+    blurb: 'Built for categorised data: a big legend, room for figures, a clean base.',
+    tags: ['Categories', 'Legend'],
     preview: ['neatline', 'north', 'scale'],
     basemap: 'positron',
-    look: { filter: 'soft', texture: 'none', vignette: 0 },
+    look: { filter: 'none', texture: 'none', vignette: 0 },
     groups: { ...BARE, labels: true },
     page: { size: 'a3', orientation: 'portrait' },
-    suggest: { job: 'lulc', datasets: ['admin-wards'] },
+    suggest: { tool: 'count-in', datasets: ['admin-wards'] },
     elements: [
-      E('title', 6, 5, 62, 7, { text: 'Land Use / Land Cover', style: { size: 28, weight: 700 } }),
-      E('subtitle', 6, 12.2, 62, 4.5, { text: 'Classified from satellite imagery' }),
-      E('legend', 6, 68, 30, 26, { text: 'Land cover classes' }),
-      E('stats', 38, 68, 28, 26, { text: 'Class shares' }),
+      E('title', 6, 5, 62, 7, { text: 'Thematic Map', style: { size: 28, weight: 700 } }),
+      E('subtitle', 6, 12.2, 62, 4.5, { text: 'Mapped by category' }),
+      E('legend', 6, 68, 30, 26, { text: 'Categories' }),
+      E('stats', 38, 68, 28, 26, { text: 'Key figures' }),
       E('metadata', 68, 68, 26, 26, { text: 'Map information', style: { size: 8 } }),
       E('north', 88, 5, 6, 8),
       E('scale', 6, 62, 24, 4.5),
@@ -429,21 +432,21 @@ export const TEMPLATES = [
     id: 'indicator-poster',
     name: 'Indicator Poster',
     category: 'analysis',
-    blurb: 'One number, one map. For a single index like NDVI or temperature.',
-    tags: ['Index', 'Single metric'],
+    blurb: 'One measure, one map. For density, distance or a single key figure.',
+    tags: ['Density', 'Single metric'],
     preview: ['label', 'scale', 'north'],
     basemap: 'positron',
-    look: { filter: 'mono', texture: 'none', vignette: 0.1 },
+    look: { filter: 'none', texture: 'none', vignette: 0.1 },
     groups: BARE,
     page: { size: 'a3', orientation: 'portrait' },
-    suggest: { job: 'ndvi' },
+    suggest: { tool: 'hotspot' },
     elements: [
-      E('title', 6, 6, 46, 8, { text: 'Vegetation Health', style: { font: 'display', size: 34, weight: 600 } }),
-      E('subtitle', 6, 14.6, 46, 5, { text: 'NDVI composite', style: { size: 13, color: '#475569' } }),
+      E('title', 6, 6, 46, 8, { text: 'Where It Concentrates', style: { font: 'display', size: 34, weight: 600 } }),
+      E('subtitle', 6, 14.6, 46, 5, { text: 'Density across the study area', style: { size: 13, color: '#475569' } }),
       E('stats', 6, 21, 24, 22, { text: 'Result', style: { size: 12, radius: 12 } }),
       E('legend', 6, 74, 24, 20, { text: 'Index', style: { radius: 12 } }),
       E('text', 34, 88, 40, 8, {
-        text: 'Higher values indicate denser, healthier vegetation.',
+        text: 'Darker cells hold more of what was mapped.',
         style: { size: 10, color: '#475569' },
       }),
       E('north', 89, 6, 6, 8, { style: { variant: 'needle' } }),
@@ -456,19 +459,22 @@ export const TEMPLATES = [
     id: 'oil-spill',
     name: 'Incident Watch',
     category: 'analysis',
-    blurb: 'Dark water, bright detections, a caution note. Built for spill and hazard work.',
-    tags: ['Hazard', 'Radar'],
+    blurb: 'Pale water, bright zones, a caution note. Built for spill and hazard work.',
+    tags: ['Hazard', 'Zones'],
     preview: ['label', 'north', 'scale'],
-    basemap: 'liberty',
-    look: { filter: 'night', texture: 'none', vignette: 0.42 },
+    basemap: 'positron',
+    // Deliberately a gentle filter: the look is a CSS filter over the whole
+    // map canvas, so anything stronger would recolour the detections too and
+    // the legend would stop matching the map. The dark cards carry the mood.
+    look: { filter: 'soft', texture: 'none', vignette: 0.3 },
     groups: { roads: false, water: true, buildings: false, boundaries: true, labels: true, landcover: false },
     page: { size: 'a4', orientation: 'landscape' },
-    suggest: { job: 'oil-spill', datasets: ['oil-gas', 'rivers', 'waterbodies'] },
+    suggest: { tool: 'buffer', datasets: ['oil-gas', 'rivers', 'waterbodies'] },
     elements: [
-      E('title', 5, 6, 48, 8, { text: 'Incident Watch', style: { size: 28, weight: 800, color: '#f8fafc' } }),
-      E('subtitle', 5, 14.2, 48, 4.5, { text: 'Radar detection of surface anomalies', style: { size: 12, color: '#7dd3fc' } }),
+      E('title', 5, 6, 48, 8, { text: 'Incident Watch', style: { size: 28, weight: 800, color: '#0f172a' } }),
+      E('subtitle', 5, 14.2, 48, 4.5, { text: 'Affected zones and infrastructure at risk', style: { size: 12, color: '#0369a1' } }),
       E('legend', 5, 60, 22, 30, {
-        text: 'Detections',
+        text: 'Zones',
         style: { bg: '#0f172a', bgOpacity: 0.84, border: '#334155', borderWidth: 1, color: '#e2e8f0', radius: 10, size: 10 },
       }),
       E('stats', 29, 60, 22, 30, {
@@ -476,12 +482,15 @@ export const TEMPLATES = [
         style: { bg: '#0f172a', bgOpacity: 0.84, border: '#334155', borderWidth: 1, color: '#e2e8f0', radius: 10, size: 10 },
       }),
       E('text', 53, 78, 42, 12, {
-        text: 'Caution: dark radar patches can also be low wind, algal mats or shadow. Treat every detection as a lead to verify in the field, not a confirmed spill.',
-        style: { size: 9.5, color: '#fbbf24', lineHeight: 1.45 },
+        text: 'Caution: zones drawn here are straight-line distances from mapped infrastructure. Treat every one as a lead to verify in the field, not a confirmed impact.',
+        style: {
+          size: 9.5, color: '#7c2d12', lineHeight: 1.45,
+          bg: '#fffbeb', bgOpacity: 0.94, border: '#fcd34d', borderWidth: 1, radius: 8, padding: 7,
+        },
       }),
-      E('north', 91, 6, 5, 8, { style: { color: '#e2e8f0' } }),
-      E('scale', 53, 92, 20, 5, { style: { color: '#e2e8f0' } }),
-      E('credits', 5, 94, 46, 3, { style: { color: '#94a3b8', size: 6.4 } }),
+      E('north', 91, 6, 5, 8, { style: { color: '#0f172a' } }),
+      E('scale', 53, 92, 20, 5, { style: { color: '#0f172a' } }),
+      E('credits', 5, 94, 46, 3, { style: { color: '#475569', size: 6.4 } }),
     ],
   },
 
@@ -497,7 +506,7 @@ export const TEMPLATES = [
     look: { filter: 'mono', texture: 'paper', vignette: 0.15 },
     groups: QUIET,
     page: { size: 'a4', orientation: 'portrait' },
-    suggest: { job: 'lst' },
+    suggest: { tool: 'hotspot' },
     elements: [
       E('neatline', 3.5, 3.5, 93, 93, { style: { color: '#292524', borderWidth: 2, inner: false } }),
       E('title', 7, 6.5, 86, 7, { text: 'CLIMATE BULLETIN', style: { font: 'serif', size: 36, weight: 700, align: 'center', color: '#1c1917' } }),
@@ -511,6 +520,232 @@ export const TEMPLATES = [
       E('north', 87, 20, 5, 7, { style: { color: '#292524' } }),
       E('scale', 7, 90, 20, 4.5, { style: { color: '#292524', variant: 'line' } }),
       E('credits', 33, 91.5, 60, 3, { style: { font: 'serif', size: 6.4, align: 'right', color: '#57534e' } }),
+    ],
+  },
+
+  /* ================= GEOINFOTECH GIS DEPARTMENT =================== */
+  /*
+   * Traced from real sheets produced by the Geoinfotech GIS department.
+   * Each one keeps the original's *layout* — where the title sits, how the
+   * furniture is grouped, what the margins do — and drops the subject matter,
+   * so the same arrangement can carry anybody's study area.
+   *
+   * `photo` names the sheet in src/assets/contributors/ that the layout came
+   * from; those templates show the real map as their thumbnail instead of a
+   * CSS mock-up.
+   */
+
+  {
+    id: 'gid-hazard-plate',
+    name: 'Hazard Plate',
+    category: 'geoinfotech',
+    photo: 'flood-susceptibility.jpg',
+    blurb: 'Wide risk plate: engraved title, tall colour key, figures in the corner.',
+    tags: ['Risk', 'A3'],
+    preview: ['neatline', 'north', 'scale'],
+    basemap: 'positron',
+    look: { filter: 'soft', texture: 'none', vignette: 0.16 },
+    groups: { ...QUIET, buildings: false },
+    page: { size: 'a3', orientation: 'landscape' },
+    suggest: { tool: 'hotspot', datasets: ['rivers', 'waterbodies'] },
+    elements: [
+      E('neatline', 2.2, 2.6, 95.6, 94.8, { style: { color: '#8a9199', borderWidth: 1, inner: true, gap: 1.5, innerWidth: 0.6 } }),
+      E('logo', 5.5, 6.5, 8, 12),
+      // The original sets the place name over the map type, both hard right.
+      E('title', 48, 7, 46, 8, { text: 'RIVERS STATE', style: { font: 'display', size: 44, weight: 700, align: 'right', color: '#4d7f92', lineHeight: 1 } }),
+      E('subtitle', 48, 15.6, 46, 6, { text: 'FLOOD SUSCEPTIBILITY MAP', style: { font: 'display', size: 26, weight: 500, align: 'right', color: '#7fa9b6', lineHeight: 1 } }),
+      E('legend', 4.5, 66, 25, 28, {
+        text: '',
+        style: { size: 13, gap: 4.6, swatch: 22, bg: '#ffffff', bgOpacity: 0, border: '#ffffff', borderWidth: 0, shadow: false, color: '#2f3a42' },
+      }),
+      E('stats', 70, 74, 26, 20, {
+        text: 'By area',
+        style: { size: 10, bg: '#ffffff', bgOpacity: 0, border: '#ffffff', borderWidth: 0, shadow: false, color: '#2f3a42' },
+      }),
+      E('north', 86, 36, 8, 11, { style: { variant: 'compass', color: '#2f7d95' } }),
+      E('scale', 30, 90.5, 26, 4.5, { style: { variant: 'checker', color: '#2f7d95', align: 'center', size: 8.5 } }),
+      E('credits', 4.5, 96, 62, 2.4, { style: { size: 6.4, color: '#8a9199' } }),
+    ],
+  },
+
+  {
+    id: 'gid-analyst-sheet',
+    name: 'Analyst Sheet',
+    category: 'geoinfotech',
+    photo: 'isochrone-ikeja.jpg',
+    blurb: 'Full-bleed working sheet — heading top right, key down the side.',
+    tags: ['Analysis', 'Key panel'],
+    preview: ['neatline', 'north', 'scale', 'grid'],
+    basemap: 'bright',
+    look: { filter: 'none', texture: 'none', vignette: 0 },
+    groups: ALL_ON,
+    page: { size: 'a3', orientation: 'landscape' },
+    suggest: { tool: 'buffer', datasets: ['roads-major', 'health'] },
+    elements: [
+      E('neatline', 2.5, 2.5, 95, 95, { style: { color: '#0f172a', borderWidth: 1.4, inner: false } }),
+      E('title', 52, 6, 43, 8, {
+        text: 'MAP SHOWING THE TRAVEL TIME FROM MAJOR LANDMARKS',
+        style: { font: 'sans', size: 15, weight: 800, align: 'right', color: '#0f172a', lineHeight: 1.28 },
+      }),
+      E('legend', 72, 21, 24, 34, {
+        text: 'Legend',
+        style: { size: 10, gap: 2.8, swatch: 13, bg: '#ffffff', bgOpacity: 0.92, border: '#94a3b8', borderWidth: 0.8, radius: 0, shadow: false },
+      }),
+      E('north', 5.5, 7, 4.5, 9, { style: { variant: 'needle', color: '#1f2937' } }),
+      E('logo', 4.5, 79, 11, 13),
+      E('scale', 40, 90, 28, 5, { style: { variant: 'checker', color: '#0f172a', align: 'center', thickness: 5 } }),
+      E('credits', 4.5, 95.4, 62, 2.4, { style: { size: 6.4, color: '#475569' } }),
+    ],
+  },
+
+  {
+    id: 'gid-index-poster',
+    name: 'Index Poster',
+    category: 'geoinfotech',
+    photo: 'security-pressure-index.jpg',
+    blurb: 'Edge-to-edge poster: huge name, loose key, a written summary in the corner.',
+    tags: ['Poster', 'Narrative'],
+    preview: ['label', 'scale'],
+    basemap: 'positron',
+    look: { filter: 'soft', texture: 'none', vignette: 0.3 },
+    groups: { ...BARE, labels: true },
+    page: { size: 'a3', orientation: 'landscape' },
+    suggest: { tool: 'hotspot' },
+    elements: [
+      E('title', 3, 2.5, 40, 9.6, { text: 'Nigeria', style: { font: 'sans', size: 62, weight: 800, color: '#111827', lineHeight: 1 } }),
+      E('subtitle', 3.6, 12.4, 40, 5, { text: 'Security Pressure Index Map', style: { size: 18, weight: 400, color: '#374151' } }),
+      // No card behind the key — on a full-bleed poster the swatches sit
+      // straight on the map, as they do on the original.
+      E('legend', 3.2, 39, 22, 24, {
+        text: '',
+        style: { size: 12.5, gap: 4.4, swatch: 18, bg: '#ffffff', bgOpacity: 0, border: '#ffffff', borderWidth: 0, shadow: false, color: '#1f2937' },
+      }),
+      E('text', 66, 76, 31, 17, {
+        text: 'Replace this with two or three sentences on what the index combines, what the high and low ends mean, and what a reader should do with it.',
+        style: { size: 10, lineHeight: 1.5, color: '#1f2937', align: 'justify' },
+      }),
+      E('scale', 2.5, 93, 30, 4.5, { style: { variant: 'checker', color: '#1f2937', size: 8 } }),
+      E('logo', 77, 94, 9, 4.5),
+      E('credits', 87, 95.2, 11, 2.4, { style: { size: 5.6, align: 'right', color: '#6b7280' } }),
+    ],
+  },
+
+  {
+    id: 'gid-survey-sheet',
+    name: 'Survey Sheet',
+    category: 'geoinfotech',
+    photo: 'emerging-hotspots.jpg',
+    blurb: 'The full professional sheet — map left, a stacked column of panels right.',
+    tags: ['Sidebar', 'Insets', 'Complete'],
+    preview: ['neatline', 'north', 'scale', 'inset', 'coords'],
+    basemap: 'positron',
+    look: { filter: 'none', texture: 'none', vignette: 0 },
+    groups: QUIET,
+    page: { size: 'a3', orientation: 'landscape' },
+    suggest: { tool: 'hotspot', datasets: ['settlements', 'roads-major'] },
+    elements: [
+      E('neatline', 2, 2, 96, 96, { style: { color: '#0f172a', borderWidth: 1.4, inner: false } }),
+      // An opaque backing so the column reads as paper, not as map. It is
+      // first in the list, which puts it behind every panel that follows.
+      E('shape', 60.5, 2, 37.5, 96, {
+        style: { variant: 'rectangle', fill: '#ffffff', fillOpacity: 1, stroke: '#0f172a', strokeWidth: 1.2, radius: 0 },
+      }),
+      E('title', 4.5, 4, 54, 5.5, {
+        text: 'URBAN EXPANSION EMERGING HOT SPOT ANALYSIS',
+        style: { size: 17, weight: 800, align: 'center', color: '#0f172a' },
+      }),
+      E('inset', 62, 4, 17.4, 22, { style: { size: 7, border: '#0f172a', borderWidth: 0.9, radius: 0, shadow: false, bgOpacity: 1 } }),
+      E('metadata', 80, 4, 16.5, 22, { text: 'Location', style: { size: 7, border: '#0f172a', borderWidth: 0.9, radius: 0, shadow: false } }),
+      E('legend', 62, 27.5, 34.5, 24, {
+        text: 'KEY',
+        style: { size: 8.4, gap: 2, swatch: 11, border: '#0f172a', borderWidth: 0.9, radius: 0, shadow: false, align: 'center' },
+      }),
+      E('text', 62, 53, 34.5, 4, { text: 'Scale 1 : 175,000', style: { size: 11, weight: 700, align: 'center', color: '#0f172a' } }),
+      E('scale', 65, 58, 28.5, 5, { style: { variant: 'checker', align: 'center', color: '#0f172a', thickness: 5 } }),
+      E('text', 62, 66, 18.5, 20, {
+        text: 'Say what the analysis does in a short paragraph: the technique, the period it covers, and what a reader can conclude from it.',
+        style: { size: 8.2, lineHeight: 1.45, color: '#1f2937', align: 'justify' },
+      }),
+      E('logo', 81.5, 66, 15, 12),
+      E('credits', 81.5, 79, 15, 6, { style: { size: 6.2, align: 'center', color: '#334155' } }),
+      E('north', 74, 87.5, 4.5, 8.5, { style: { variant: 'needle', color: '#0f172a' } }),
+      E('metadata', 80, 87, 16.5, 9.5, { text: 'Spatial reference', style: { size: 6.6, border: '#0f172a', borderWidth: 0.9, radius: 0, shadow: false } }),
+      E('stats', 62, 87, 11, 9.5, { text: 'Figures', style: { size: 6.6, border: '#0f172a', borderWidth: 0.9, radius: 0, shadow: false } }),
+      E('text', 4.5, 95.4, 24, 2.6, { text: 'Edition of 2026', style: { size: 7, italic: true, weight: 700, color: '#0f172a' } }),
+    ],
+  },
+
+  {
+    id: 'gid-study-area',
+    name: 'Study Area Sheet',
+    category: 'geoinfotech',
+    photo: 'lagos-study-area.jpg',
+    blurb: 'Reference sheet: map on top, a banded strip of panels underneath.',
+    tags: ['Reference', 'Banded'],
+    preview: ['neatline', 'north', 'scale', 'inset', 'coords'],
+    basemap: 'bright',
+    look: { filter: 'none', texture: 'none', vignette: 0 },
+    groups: ALL_ON,
+    page: { size: 'a3', orientation: 'landscape' },
+    suggest: { datasets: ['admin-wards', 'settlements'] },
+    elements: [
+      E('neatline', 2.5, 3, 95, 57, { style: { color: '#0f172a', borderWidth: 1.6, inner: false } }),
+      // The lower third is paper, not map — one opaque band, panels on top.
+      E('shape', 2.5, 62, 95, 35, {
+        style: { variant: 'rectangle', fill: '#ffffff', fillOpacity: 1, stroke: '#0f172a', strokeWidth: 1.6, radius: 0 },
+      }),
+      E('title', 15, 5, 70, 6, {
+        text: 'Study Area Map of Lagos State, Nigeria',
+        style: { size: 24, weight: 800, align: 'center', color: '#0f172a' },
+      }),
+      E('inset', 3.5, 63, 17, 33, { style: { size: 7, border: '#0f172a', borderWidth: 1.2, radius: 0, shadow: false, bgOpacity: 1 } }),
+      E('text', 22, 64.5, 45, 4, { text: 'SCALE', style: { size: 13, weight: 700, align: 'center', color: '#0f172a' } }),
+      E('scale', 24, 70, 41, 6, { style: { variant: 'checker', align: 'center', color: '#0f172a', thickness: 6, size: 10 } }),
+      E('metadata', 68.5, 63, 28, 17.5, { text: 'Spatial Reference', style: { size: 8.4, border: '#0f172a', borderWidth: 1.2, radius: 0, shadow: false } }),
+      E('legend', 22, 79, 45, 17.5, {
+        text: '',
+        style: { size: 8, gap: 1.8, swatch: 11, border: '#0f172a', borderWidth: 1.2, radius: 0, shadow: false },
+      }),
+      E('north', 71, 82, 5, 12, { style: { variant: 'needle', color: '#0f172a' } }),
+      E('logo', 80, 82, 15, 12),
+      E('credits', 68.5, 95.4, 28, 2.4, { style: { size: 6, align: 'center', color: '#475569' } }),
+    ],
+  },
+
+  {
+    id: 'gid-night-atlas',
+    name: 'Night Atlas',
+    category: 'geoinfotech',
+    photo: 'africa-hydrography.jpg',
+    blurb: 'Data glowing on black, with the whole story stacked down one margin.',
+    tags: ['Dark', 'Portrait', 'Poster'],
+    preview: ['label', 'north'],
+    basemap: 'liberty',
+    look: { filter: 'night', texture: 'none', vignette: 0.55 },
+    groups: { roads: false, water: true, buildings: false, boundaries: false, labels: false, landcover: false },
+    page: { size: 'a3', orientation: 'portrait' },
+    suggest: { datasets: ['rivers', 'waterbodies'] },
+    elements: [
+      E('north', 83, 9.5, 9, 9, { style: { variant: 'needle', color: '#38bdf8' } }),
+      E('logo', 13.5, 48.5, 8, 6),
+      E('legend', 7.5, 55, 23, 19, {
+        text: 'River network',
+        style: {
+          size: 9, gap: 2.1, swatch: 12,
+          bg: '#000000', bgOpacity: 0.55, border: '#e2e8f0', borderWidth: 0.8, radius: 0,
+          color: '#f1f5f9', shadow: false,
+        },
+      }),
+      // Two-tone masthead: the plain line sits above the accent word.
+      E('subtitle', 6.5, 74.6, 28, 3.4, { text: 'THE RIVERS OF', style: { size: 22, weight: 700, color: '#f8fafc' } }),
+      E('title', 6.5, 78.4, 28, 6, { text: 'AFRICA', style: { size: 34, weight: 800, color: '#6ee7b7', lineHeight: 1 } }),
+      E('scale', 6.5, 85, 25, 4, { style: { variant: 'line', color: '#f1f5f9', size: 9.5 } }),
+      E('text', 5.5, 89.5, 30, 2.7, { text: 'Map made by the GIS Department', style: { size: 10, weight: 700, align: 'center', color: '#f8fafc' } }),
+      E('metadata', 5.5, 92.4, 30, 5, {
+        text: '',
+        style: { size: 8, align: 'center', color: '#cbd5e1', bg: '#000000', bgOpacity: 0, border: '#000000', borderWidth: 0, shadow: false },
+      }),
+      E('credits', 66, 96.4, 29, 2.4, { style: { size: 7, weight: 700, align: 'right', color: '#7dd3fc' } }),
     ],
   },
 
@@ -537,6 +772,21 @@ export const templateById = (id) => TEMPLATES.find((t) => t.id === id) ?? null;
 
 export const templatesInCategory = (cat) =>
   (!cat || cat === 'all' ? TEMPLATES : TEMPLATES.filter((t) => t.category === cat));
+
+/* ------------------------------------------------------------------ */
+/* The landing gallery                                                 */
+/*                                                                     */
+/* The GIS department layouts are shown by the contributor section,     */
+/* beside the sheet each was traced from — which is the whole point of  */
+/* them. Repeating them in "Start from a style" would say the same      */
+/* thing twice and worse. They stay fully available inside the studio's */
+/* Templates pane.                                                     */
+/* ------------------------------------------------------------------ */
+const IN_GALLERY = (t) => t.category !== 'geoinfotech';
+
+export const GALLERY_CATEGORIES = TEMPLATE_CATEGORIES.filter((c) => c.id !== 'geoinfotech');
+
+export const galleryTemplates = (cat) => templatesInCategory(cat).filter(IN_GALLERY);
 
 /** Human label for a category id. */
 export const categoryLabel = (id) =>

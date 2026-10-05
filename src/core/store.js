@@ -7,11 +7,16 @@
  * pipeline from drifting apart the way they did in the v2 prototype.
  */
 
+// The catalogue is a static data module with no imports of its own, so this
+// stays a leaf dependency rather than a cycle back into the UI.
+import { templateById } from '../templates/catalog.js';
+
 const HISTORY_KEYS = ['elements', 'page', 'templateId', 'mapLook'];
 const HISTORY_LIMIT = 60;
 
 export const state = {
   view: 'landing',                     // 'landing' | 'studio'
+  projectId: null,                     // entry in the saved project library
   projectName: 'Untitled map',
   activeTool: 'templates',             // which left panel is showing
 
@@ -26,7 +31,16 @@ export const state = {
 
   page: { size: 'a4', orientation: 'portrait', dpi: 150, background: '#ffffff' },
 
-  studyArea: null,                     // { name, level, geojson, bbox, areaKm2 }
+  // The areas this map is about, and the combined view of them that the rest
+  // of the app reads. Both are written together by data/study-areas.js —
+  // never assign either one directly.
+  studyAreas: [],                      // [{ name, level, geojson, bbox, areaKm2 }]
+  studyArea: null,                     // the same shape, covering all of them
+  clipToArea: true,                    // trim open data to the boundary, not the bbox
+  // Bumped when a locator-inset context outline finishes loading. A counter,
+  // not the outline: several insets can want different ones, and each looks
+  // its own up. See data/inset-context.js.
+  insetContext: 0,
 
   layers: [],                          // see layers/registry.js
   elements: [],                        // see layout/elements.js
@@ -130,38 +144,170 @@ export const canUndo = () => past.length > 0;
 export const canRedo = () => future.length > 0;
 
 /* ------------------------------------------------------------------ */
-/* persistence — a project survives a page refresh                     */
+/* project library — many projects, saved in this browser              */
 /* ------------------------------------------------------------------ */
-const STORAGE_KEY = 'gds.project.v3';
+const LIBRARY_KEY = 'gds.projects.v3';
+const LEGACY_KEY = 'gds.project.v3';      // the old single-slot format
 const PERSIST_KEYS = [
   'projectName', 'templateId', 'basemap', 'basemapGroups', 'mapView', 'terrain',
-  'buildings3d', 'mapLook', 'page', 'elements', 'studyArea',
+  'buildings3d', 'mapLook', 'page', 'elements', 'studyAreas', 'clipToArea',
 ];
 
-export function saveProject() {
-  try {
-    const doc = Object.fromEntries(PERSIST_KEYS.map((k) => [k, state[k]]));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ savedAt: Date.now(), doc }));
-    return true;
-  } catch (err) {
-    console.warn('[store] could not save project', err);
-    return false;
-  }
-}
+/** Beyond this the oldest project is dropped — localStorage is finite. */
+export const MAX_PROJECTS = 24;
 
-export function loadProject() {
+const newId = () => `p_${Date.now().toString(36)}${Math.floor(Math.random() * 1e4).toString(36)}`;
+
+function readLibrary() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const { savedAt, doc } = JSON.parse(raw);
-    return { savedAt, doc };
+    const list = JSON.parse(localStorage.getItem(LIBRARY_KEY) ?? '[]');
+    return Array.isArray(list) ? list : [];
   } catch {
-    return null;
+    return [];
   }
 }
 
-export function clearProject() {
-  try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+/** Write, shedding thumbnails and then whole projects if the quota bites. */
+function writeLibrary(list) {
+  const attempts = [
+    list,
+    list.map((p, i) => (i === 0 ? p : { ...p, thumb: '' })),   // keep newest thumb
+    list.map((p) => ({ ...p, thumb: '' })),
+    list.slice(0, Math.max(1, Math.floor(list.length / 2))).map((p) => ({ ...p, thumb: '' })),
+  ];
+  for (const attempt of attempts) {
+    try {
+      localStorage.setItem(LIBRARY_KEY, JSON.stringify(attempt));
+      return { ok: true, trimmed: attempt.length < list.length || attempt.some((p, i) => !p.thumb && list[i].thumb) };
+    } catch { /* try a smaller payload */ }
+  }
+  return { ok: false, error: 'This browser is out of storage space for saved projects. Delete a few from the home page.' };
+}
+
+let migrated = false;
+function migrateLegacy() {
+  if (migrated) return;
+  migrated = true;
+  try {
+    const raw = localStorage.getItem(LEGACY_KEY);
+    if (!raw) return;
+    const { savedAt, doc } = JSON.parse(raw);
+    if (doc) {
+      const list = readLibrary();
+      list.unshift({
+        id: newId(),
+        name: doc.projectName || 'Untitled map',
+        templateId: doc.templateId,
+        savedAt: savedAt ?? Date.now(),
+        thumb: '',
+        doc,
+      });
+      writeLibrary(list);
+    }
+    localStorage.removeItem(LEGACY_KEY);
+  } catch { /* nothing worth recovering */ }
+}
+
+/** Every saved project, newest first, without the (large) document body. */
+export function listProjects() {
+  migrateLegacy();
+  return readLibrary()
+    .map(({ doc, ...meta }) => meta)
+    .sort((a, b) => b.savedAt - a.savedAt);
+}
+
+export function getProject(id) {
+  migrateLegacy();
+  return readLibrary().find((p) => p.id === id) ?? null;
+}
+
+/**
+ * Save the live document into the current project, creating one on first
+ * save. Pass a thumbnail data URL to refresh the home-page card.
+ * @returns {{ok: boolean, id?: string, error?: string}}
+ */
+/**
+ * Is the page still exactly what the template laid out?
+ *
+ * Compared field by field rather than by a "dirty" flag, so it stays honest
+ * no matter which panel made the change — moving a title, typing one, adding
+ * or deleting an element all show up here without any of them having to
+ * remember to report it.
+ */
+function elementsAreUntouched() {
+  const tpl = templateById(state.templateId);
+  if (!tpl) return false;
+  if (state.elements.length !== tpl.elements.length) return false;
+  return state.elements.every((elm, i) => {
+    const spec = tpl.elements[i];
+    return elm.type === spec.type
+      && elm.x === spec.x && elm.y === spec.y && elm.w === spec.w && elm.h === spec.h
+      && (elm.text ?? '') === (spec.text ?? '');
+  });
+}
+
+/**
+ * Has the user actually started something here?
+ *
+ * Opening a template is browsing, not work — on its own it must never reach
+ * the project library, or looking through the gallery fills the home page
+ * with identical stubs. Loading an area, adding data, running an analysis or
+ * editing the page all count; so does a project that has been saved once
+ * already, which from then on keeps itself up to date.
+ */
+export function hasWork() {
+  return Boolean(
+    state.projectId
+    || state.studyArea
+    || state.layers.length
+    || state.analysisRuns.length
+    || !elementsAreUntouched(),
+  );
+}
+
+export function saveProject({ thumbnail, name } = {}) {
+  migrateLegacy();
+  const doc = Object.fromEntries(PERSIST_KEYS.map((k) => [k, state[k]]));
+  const list = readLibrary();
+  const id = state.projectId ?? newId();
+  const existing = list.find((p) => p.id === id);
+
+  const entry = {
+    id,
+    name: name ?? state.projectName ?? 'Untitled map',
+    templateId: state.templateId,
+    savedAt: Date.now(),
+    thumb: thumbnail ?? existing?.thumb ?? '',
+    doc,
+  };
+
+  const next = [entry, ...list.filter((p) => p.id !== id)].slice(0, MAX_PROJECTS);
+  const result = writeLibrary(next);
+  if (!result.ok) return result;
+
+  if (state.projectId !== id) set({ projectId: id }, { history: false });
+  return { ok: true, id };
+}
+
+/** Fork the live document into a brand-new project. */
+export function saveProjectAs(name, thumbnail) {
+  set({ projectId: null, projectName: name || state.projectName }, { history: false });
+  return saveProject({ thumbnail, name });
+}
+
+export function deleteProject(id) {
+  const result = writeLibrary(readLibrary().filter((p) => p.id !== id));
+  if (state.projectId === id) set({ projectId: null }, { history: false });
+  return result;
+}
+
+export function renameProject(id, name) {
+  const list = readLibrary();
+  const entry = list.find((p) => p.id === id);
+  if (!entry) return { ok: false };
+  entry.name = name;
+  if (entry.doc) entry.doc.projectName = name;
+  return writeLibrary(list);
 }
 
 /** Serialise the whole project for "download .gdsmap" / re-import. */

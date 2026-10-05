@@ -8,6 +8,9 @@
 import { state, set, touch } from '../core/store.js';
 import { uid } from '../core/dom.js';
 import { dominantGeometry, featureCount, bboxOf } from '../core/geo.js';
+import { singleSymbology, paintColor, legendRowsFor, shade, DEFAULT_LINE_WIDTH_MM } from './symbology.js';
+
+export { shade };
 
 /** Sensible default paint for a newly added vector layer. */
 export function defaultStyle(kind, color = '#0369a1') {
@@ -16,24 +19,42 @@ export function defaultStyle(kind, color = '#0369a1') {
     fillOpacity: kind === 'polygon' ? 0.35 : 0,
     stroke: kind === 'polygon' ? shade(color, -0.25) : color,
     strokeWidth: kind === 'line' ? 1.6 : 1.2,
+    // Line work carries its own thickness, separate from the outline width a
+    // polygon or a point uses, because on a line layer it is the subject
+    // rather than an edge around one. Millimetres of printed page;
+    // layers/render.js converts to the pixels the map paints in.
+    ...(kind === 'line' ? { widthMm: DEFAULT_LINE_WIDTH_MM } : {}),
     strokeOpacity: 1,
-    dash: 'solid',            // solid | dashed | dotted
+    dash: 'solid',            // a LINE_STYLES id
+    icon: '',                 // point symbol id, '' for a plain circle
     radius: 4,                // point radius
     labelField: '',           // property name to label with
     labelSize: 11,
   };
 }
 
-/** Lighten (t>0) or darken (t<0) a hex colour. */
-export function shade(hex, t) {
-  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '');
-  if (!m) return hex;
-  const mix = (c) => {
-    const v = parseInt(c, 16);
-    const out = t >= 0 ? v + (255 - v) * t : v * (1 + t);
-    return Math.max(0, Math.min(255, Math.round(out))).toString(16).padStart(2, '0');
-  };
-  return `#${mix(m[1])}${mix(m[2])}${mix(m[3])}`;
+/**
+ * Recompute a layer's paint and legend from its symbology.
+ *
+ * This is the one place the two are derived, which is what guarantees the
+ * printed legend shows the colours actually on the map.
+ */
+export function refreshSymbology(layer) {
+  if (layer.type === 'raster') return layer;
+  const sym = layer.symbology ?? singleSymbology(layer.style?.fill ?? '#0369a1');
+  layer.symbology = sym;
+
+  if (sym.mode === 'single') {
+    layer.style.fill = sym.color;
+    // Lines and points read by their stroke, so keep it in step.
+    if (layer.kind !== 'polygon') layer.style.stroke = sym.color;
+  } else {
+    layer.style.fill = paintColor(sym, '#0369a1');
+    if (layer.kind !== 'polygon') layer.style.stroke = layer.style.fill;
+  }
+
+  layer.legend = legendRowsFor(layer);
+  return layer;
 }
 
 /**
@@ -55,8 +76,12 @@ export function addVectorLayer(spec) {
     bbox: bboxOf(spec.geojson),
     visible: spec.visible ?? true,
     opacity: spec.opacity ?? 1,
+    // Draw beneath the basemap's place names — analysis results and land
+    // cover read much better with labels still on top.
+    underLabels: spec.underLabels ?? false,
+    symbology: spec.symbology ?? singleSymbology(spec.color ?? '#0369a1'),
     style: { ...defaultStyle(kind, spec.color ?? '#0369a1'), ...(spec.style ?? {}) },
-    legend: spec.legend ?? [{ label: spec.name ?? 'Layer', color: spec.color ?? '#0369a1', swatch: kind }],
+    legend: [],
     meta: {
       count: featureCount(spec.geojson),
       addedAt: Date.now(),
@@ -64,7 +89,18 @@ export function addVectorLayer(spec) {
       ...(spec.meta ?? {}),
     },
   };
+  refreshSymbology(layer);
   set({ layers: [...state.layers, layer] }, { history: false });
+  return layer;
+}
+
+/** Give a layer a new symbology; paint and legend follow automatically. */
+export function applySymbology(id, symbology) {
+  const layer = getLayer(id);
+  if (!layer) return null;
+  layer.symbology = symbology;
+  refreshSymbology(layer);
+  touch('layers');
   return layer;
 }
 
@@ -78,6 +114,7 @@ export function addRasterLayer(spec) {
     tileUrl: spec.tileUrl,
     visible: spec.visible ?? true,
     opacity: spec.opacity ?? 0.85,
+    underLabels: spec.underLabels ?? false,
     bbox: spec.bbox ?? null,
     style: {},
     legend: spec.legend ?? [],
@@ -94,8 +131,20 @@ export const visibleLayers = () => state.layers.filter((l) => l.visible);
 export function updateLayer(id, patch) {
   const layer = getLayer(id);
   if (!layer) return null;
-  Object.assign(layer, patch);
-  if (patch.style) layer.style = { ...layer.style, ...patch.style };
+  // `style` is merged, not replaced — pull it out first, or Object.assign
+  // would overwrite the whole style object and the merge below would have
+  // nothing left to merge into.
+  const { style, ...rest } = patch;
+  Object.assign(layer, rest);
+  if (style) {
+    layer.style = { ...layer.style, ...style };
+    // A colour picked in the inspector is a single-symbology edit; fold it
+    // back into the symbology so the legend follows.
+    if (layer.symbology?.mode === 'single' && typeof style.fill === 'string') {
+      layer.symbology = { ...layer.symbology, color: style.fill };
+    }
+  }
+  if (layer.type !== 'raster') refreshSymbology(layer);
   touch('layers');
   return layer;
 }
@@ -135,7 +184,7 @@ export function collectLegend() {
   for (const layer of state.layers) {
     if (!layer.visible) continue;
     for (const item of layer.legend ?? []) {
-      const key = `${item.label}|${item.color}`;
+      const key = `${item.label}|${item.color}|${item.icon ?? ''}|${item.dash ?? ''}`;
       if (seen.has(key)) continue;
       seen.add(key);
       out.push({ ...item, layerId: layer.id });

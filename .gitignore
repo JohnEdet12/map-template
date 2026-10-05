@@ -9,3 +9,6 @@ dist/
 Thumbs.db
 .vite.stdout.log
 .vite.stderr.log
+
+# The geodata cache database — rebuildable, and far too big for git.
+server/data/

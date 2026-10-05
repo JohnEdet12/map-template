@@ -9,21 +9,26 @@
   height: var(--header-h); flex: none; z-index: 40;
   display: flex; align-items: center; gap: 12px; padding: 0 12px;
   border-bottom: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(10px);
+  background: var(--glass); backdrop-filter: blur(10px);
 }
 .brand-mark {
   display: grid; place-items: center; height: 34px; width: 34px; flex: none;
-  border-radius: 11px; border: 1px solid #bae6fd; background: #f0f9ff; color: var(--river);
+  border-radius: 11px; border: 1px solid var(--accent-soft); background: var(--accent-wash); color: var(--accent);
   cursor: pointer; transition: background 0.15s, transform 0.15s;
 }
-.brand-mark:hover { background: var(--mist); transform: translateY(-1px); }
+.brand-mark:hover { background: var(--accent-wash); transform: translateY(-1px); }
 .project-name-input {
   border: 1px solid transparent; background: transparent; border-radius: 7px;
   padding: 2px 6px; margin-left: -6px; font-size: 14px; font-weight: 600; color: var(--ink);
   max-width: 230px; width: 100%; outline: none;
 }
+.project-subline { display: none; margin: 0; font-size: 11px; line-height: 1; color: var(--ink-faint); }
+@media (min-width: 1024px) { .project-subline { display: block; } }
+.header-sep { display: none; height: 20px; width: 1px; background: var(--line); }
+@media (min-width: 640px) { .header-sep { display: block; } }
+
 .project-name-input:hover { border-color: var(--line); }
-.project-name-input:focus { border-color: #7dd3fc; background: #fff; }
+.project-name-input:focus { border-color: var(--accent-bright); background: var(--surface); }
 
 /* Guided step strip ------------------------------------------------ */
 .step-strip {
@@ -34,49 +39,49 @@
 .step {
   display: flex; align-items: center; gap: 6px;
   border: 1px solid transparent; border-radius: 999px;
-  padding: 4px 11px 4px 5px; font-size: 11.5px; font-weight: 600; color: #94a3b8;
+  padding: 4px 11px 4px 5px; font-size: 11.5px; font-weight: 600; color: var(--ink-faint);
   background: transparent; cursor: pointer; transition: all 0.15s;
 }
 .step:hover { color: var(--ink-soft); background: var(--line-soft); }
 .step-num {
   display: grid; place-items: center; height: 19px; width: 19px; border-radius: 50%;
-  background: #e2e8f0; color: #64748b; font-size: 10px; font-weight: 800;
+  background: var(--line); color: var(--ink-soft); font-size: 10px; font-weight: 800;
 }
 .step.is-done { color: var(--leaf); }
-.step.is-done .step-num { background: #ccfbf1; color: #0f766e; }
-.step.is-active { color: var(--river-deep); background: var(--mist); border-color: #bae6fd; }
-.step.is-active .step-num { background: var(--river); color: #fff; }
-.step-sep { color: #cbd5e1; font-size: 10px; }
+.step.is-done .step-num { background: var(--accent-wash); color: var(--leaf); }
+.step.is-active { color: var(--accent-deep); background: var(--accent-wash); border-color: var(--accent-soft); }
+.step.is-active .step-num { background: var(--accent); color: var(--surface); }
+.step-sep { color: var(--line-strong); font-size: 10px; }
 
 /* Body / rails ----------------------------------------------------- */
 .studio-body { flex: 1; min-height: 0; display: flex; }
 
 .tool-rail {
   width: var(--rail-w); flex: none; z-index: 30;
-  border-right: 1px solid var(--line); background: #fff;
+  border-right: 1px solid var(--line); background: var(--surface);
   display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px;
   overflow-y: auto;
 }
 .rail-btn {
   width: 100%; border: 0; background: transparent; border-radius: 11px;
-  padding: 8px 2px; cursor: pointer; color: #64748b;
+  padding: 8px 2px; cursor: pointer; color: var(--ink-soft);
   display: grid; justify-items: center; gap: 3px;
   font-size: 10.5px; font-weight: 700; line-height: 1.1; text-align: center;
   transition: background 0.14s, color 0.14s;
 }
 .rail-btn:hover { background: var(--line-soft); color: var(--ink); }
-.rail-btn.is-active { background: var(--mist); color: var(--river-deep); }
+.rail-btn.is-active { background: var(--accent-wash); color: var(--accent-deep); }
 .rail-ico { font-size: 17px; line-height: 1; }
 .rail-badge {
   position: absolute; margin-left: 22px; margin-top: -4px;
   min-width: 15px; height: 15px; border-radius: 999px; background: var(--ember);
-  color: #fff; font-size: 9px; font-weight: 800; display: grid; place-items: center; padding: 0 3px;
+  color: var(--surface); font-size: 9px; font-weight: 800; display: grid; place-items: center; padding: 0 3px;
 }
 
 /* Side panels ------------------------------------------------------ */
 .side-panel {
   width: var(--panel-w); flex: none; z-index: 20;
-  border-right: 1px solid var(--line); background: #fff;
+  border-right: 1px solid var(--line); background: var(--surface);
   overflow-y: auto; overflow-x: hidden;
 }
 .side-panel--right { border-right: 0; border-left: 1px solid var(--line); }
@@ -85,19 +90,19 @@
 
 .panel-head { padding: 13px 14px 10px; border-bottom: 1px solid var(--line-soft); }
 .panel-head h2 { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
-.panel-head p { margin: 3px 0 0; font-size: 11.5px; line-height: 1.4; color: #64748b; }
+.panel-head p { margin: 3px 0 0; font-size: 11.5px; line-height: 1.4; color: var(--ink-soft); }
 .panel-section { padding: 12px 14px; border-bottom: 1px solid var(--line-soft); }
 .panel-section:last-child { border-bottom: 0; }
 .panel-empty {
   margin: 14px; padding: 18px 14px; border: 1px dashed var(--line); border-radius: var(--radius);
-  text-align: center; color: #94a3b8; font-size: 12px; line-height: 1.5;
+  text-align: center; color: var(--ink-faint); font-size: 12px; line-height: 1.5;
 }
 
 /* Collapsible group */
 .group > summary {
   list-style: none; cursor: pointer; padding: 10px 14px;
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #64748b;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft);
 }
 .group > summary::-webkit-details-marker { display: none; }
 .group > summary:hover { background: var(--line-soft); }
@@ -112,45 +117,99 @@
   background: transparent; text-align: left; cursor: pointer; transition: all 0.13s;
 }
 .row:hover { background: var(--line-soft); border-color: var(--line); }
-.row.is-active { background: var(--mist); border-color: #bae6fd; }
+.row.is-active { background: var(--accent-wash); border-color: var(--accent-soft); }
 .row-ico {
   display: grid; place-items: center; height: 28px; width: 28px; flex: none;
   border-radius: 8px; background: var(--line-soft); font-size: 14px; color: var(--ink-soft);
 }
-.row-main { min-width: 0; flex: 1; }
-.row-title { font-size: 12.5px; font-weight: 600; color: var(--ink); }
-.row-sub { font-size: 10.5px; color: #94a3b8; line-height: 1.3; }
-.row-act { flex: none; display: flex; gap: 2px; opacity: 0; transition: opacity 0.13s; }
-.row:hover .row-act, .row.is-active .row-act { opacity: 1; }
+/* Drawn icons sit on the text colour and follow the row's active state,
+   which a glyph in a fallback font never did. */
+.el-ico { display: grid; place-items: center; color: var(--ink-soft); }
+.el-ico svg { display: block; }
+.row.is-active .el-ico, .row:hover .el-ico { color: var(--ink); }
+.chev { color: inherit; }
 
-.swatch { height: 11px; width: 11px; flex: none; border-radius: 3px; border: 1px solid rgba(15,23,42,.12); }
+.row-main { min-width: 0; flex: 1; }
+
+/* One line each, ending in an ellipsis at whatever width the panel happens to
+   be. The title used to be truncated in JavaScript at a fixed character count,
+   which is a guess about the panel width that is wrong at every width — too
+   early on a wide screen, still overflowing on a phone. `min-width: 0` on the
+   parent is what lets a flex child shrink below its content at all. */
+.row-title,
+.row-sub {
+  display: block; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.row-title { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.row-sub { font-size: 10.5px; color: var(--ink-faint); line-height: 1.3; }
+
+/* The actions float over the end of the row rather than sitting beside it.
+   The side panel is a fixed ~280px at every desktop width, so six 23px
+   buttons in the flow leave about 25px for the name — the one part of the row
+   that says which element it is. Taking them out of the flow gives the name
+   the full width when you are reading the list, and the buttons appear over
+   its right end when you actually reach for them. */
+.row { position: relative; }
+.row-act {
+  position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
+  display: flex; gap: 1px; padding-left: 20px; border-radius: 8px;
+  opacity: 0; pointer-events: none; transition: opacity 0.13s;
+  /* Fades the truncated text out underneath instead of chopping it. */
+  background: linear-gradient(90deg, transparent, var(--surface-2) 20px);
+}
+.row:hover .row-act,
+.row.is-active .row-act,
+/* Keyboard users never hover, so the actions have to appear on focus too or
+   they are unreachable without a mouse. */
+.row:focus-within .row-act { opacity: 1; pointer-events: auto; }
+.row.is-active .row-act { background: linear-gradient(90deg, transparent, var(--accent-wash) 20px); }
+
+/* Row actions are chrome inside a 12.5px line; the 32px header button is far
+   too heavy here. Sized in CSS rather than inline so one change moves the
+   whole set. */
+.row-act .icon-btn { height: 23px; width: 23px; border-radius: 6px; }
+.ui-ico { display: grid; place-items: center; color: inherit; }
+.ui-ico svg { display: block; }
+
+/* A toggle that is currently on reads as on — a hidden element's eye stays
+   struck through and lit whether or not the pointer is over it. */
+.icon-btn.is-pressed { color: var(--accent); background: var(--accent-wash); border-color: var(--accent-soft); }
+.icon-btn.is-danger:hover { color: var(--ember); border-color: color-mix(in srgb, var(--ember) 40%, transparent); }
+
+/* Elements list: a hidden element is still listed, but should not compete
+   with the ones actually on the page. */
+.row--element.is-muted .row-title, .row--element.is-muted .el-ico { opacity: 0.55; }
+
+
+.swatch { height: 11px; width: 11px; flex: none; border-radius: 3px; border: 1px solid rgba(var(--shadow-tint), .12); }
 
 /* Template cards in the side panel */
 .tpl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; padding: 12px 14px; }
 .tpl-card {
   border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
-  background: #fff; cursor: pointer; text-align: left; padding: 0;
+  background: var(--surface); cursor: pointer; text-align: left; padding: 0;
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
 }
-.tpl-card:hover { border-color: #7dd3fc; transform: translateY(-2px); box-shadow: 0 10px 22px rgba(15,23,42,.10); }
-.tpl-card.is-active { border-color: var(--river); box-shadow: 0 0 0 2px var(--mist); }
+.tpl-card:hover { border-color: var(--accent-bright); transform: translateY(-2px); box-shadow: 0 10px 22px rgba(var(--shadow-tint), .10); }
+.tpl-card.is-active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-wash); }
 .tpl-thumb { height: 66px; position: relative; overflow: hidden; }
 .tpl-meta { padding: 6px 8px 8px; }
 .tpl-meta strong { display: block; font-size: 11.5px; font-weight: 700; color: var(--ink); line-height: 1.2; }
-.tpl-meta span { display: block; font-size: 10px; color: #94a3b8; margin-top: 2px; }
+.tpl-meta span { display: block; font-size: 10px; color: var(--ink-faint); margin-top: 2px; }
 
 /* Filter pills */
 .pill-row { display: flex; flex-wrap: wrap; gap: 5px; padding: 10px 14px 2px; }
 .pill {
-  border: 1px solid var(--line); background: #fff; color: var(--ink-soft);
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft);
   border-radius: 999px; padding: 3px 9px; font-size: 10.5px; font-weight: 700; cursor: pointer;
   transition: all 0.13s;
 }
-.pill:hover { border-color: #7dd3fc; color: var(--river-deep); }
-.pill.is-active { background: var(--river); border-color: var(--river); color: #fff; }
+.pill:hover { border-color: var(--accent-bright); color: var(--accent-deep); }
+.pill.is-active { background: var(--accent); border-color: var(--accent); color: var(--surface); }
 
 /* Canvas ----------------------------------------------------------- */
-.canvas-wrap { position: relative; flex: 1; min-width: 0; background: #eef2f6; overflow: hidden; }
+.canvas-wrap { position: relative; flex: 1; min-width: 0; background: var(--canvas-deep); overflow: hidden; }
 /* Two selectors deep on purpose: maplibre-gl.css sets `.maplibregl-map
    { position: relative }` on this same node and, being loaded later, would
    otherwise win and collapse the map to zero height. */
@@ -163,7 +222,7 @@
 }
 .control-card {
   display: flex; gap: 2px; padding: 4px;
-  background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(6px);
+  background: var(--glass); backdrop-filter: blur(6px);
   border: 1px solid var(--line); border-radius: 11px; box-shadow: var(--shadow);
 }
 .control-btn {
@@ -172,12 +231,12 @@
   transition: background 0.13s, color 0.13s;
 }
 .control-btn:hover { background: var(--line-soft); }
-.control-btn.is-active { background: var(--river); color: #fff; }
+.control-btn.is-active { background: var(--accent); color: var(--surface); }
 
 .canvas-hint {
   position: absolute; left: 12px; bottom: 12px; z-index: 25;
   max-width: 300px; padding: 7px 11px; border-radius: 10px;
-  background: rgba(15, 23, 42, 0.82); color: #e2e8f0; font-size: 11px; line-height: 1.45;
+  background: rgba(15, 23, 42, 0.82); color: var(--line); font-size: 11px; line-height: 1.45;
   box-shadow: var(--shadow); pointer-events: none; opacity: 0; transition: opacity 0.25s;
 }
 .canvas-hint.is-shown { opacity: 1; }
@@ -186,13 +245,13 @@
 .artboard {
   position: absolute; z-index: 10; box-sizing: border-box;
   border: 1.5px dashed rgba(3, 105, 161, 0.75);
-  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.13);
+  box-shadow: 0 0 0 9999px var(--scrim);
   pointer-events: none;
 }
 .artboard-label {
   position: absolute; top: -22px; left: 0; white-space: nowrap;
-  border-radius: 6px; background: rgba(255, 255, 255, 0.92); padding: 2px 7px;
-  font-size: 10.5px; font-weight: 700; color: var(--river-deep); pointer-events: none;
+  border-radius: 6px; background: var(--glass); padding: 2px 7px;
+  font-size: 10.5px; font-weight: 700; color: var(--accent-deep); pointer-events: none;
 }
 .element-layer { position: absolute; inset: 0; pointer-events: none; }
 
@@ -203,14 +262,14 @@
   outline: 1.5px solid transparent; outline-offset: 2px; border-radius: inherit;
 }
 .el:hover { outline-color: rgba(56, 189, 248, 0.85); }
-.el.is-selected { outline-color: var(--river); outline-width: 2px; }
+.el.is-selected { outline-color: var(--accent); outline-width: 2px; }
 .el.is-dragging { cursor: grabbing; opacity: 0.92; }
 .el.is-locked { cursor: default; }
 .el-inner { width: 100%; height: 100%; box-sizing: border-box; overflow: hidden; }
 
 .el-handle {
   position: absolute; z-index: 3; height: 11px; width: 11px;
-  border: 1.5px solid var(--river); background: #fff; border-radius: 3px;
+  border: 1.5px solid var(--accent); background: var(--surface); border-radius: 3px;
   display: none;
 }
 .el.is-selected:not(.is-locked) .el-handle { display: block; }
@@ -221,7 +280,7 @@
 
 .el-tag {
   position: absolute; left: 0; top: -17px; z-index: 3;
-  border-radius: 4px; background: var(--river); color: #fff;
+  border-radius: 4px; background: var(--accent); color: var(--surface);
   padding: 1px 6px; font-size: 9.5px; font-weight: 800; letter-spacing: 0.03em;
   white-space: nowrap; display: none;
 }
@@ -238,23 +297,23 @@
 .insp-row > span { font-size: 11.5px; color: var(--ink-soft); }
 .color-input {
   height: 26px; width: 38px; flex: none; padding: 0; border: 1px solid var(--line);
-  border-radius: 7px; background: #fff; cursor: pointer;
+  border-radius: 7px; background: var(--surface); cursor: pointer;
 }
 .seg { display: inline-flex; width: 100%; border: 1px solid var(--line); border-radius: 9px; background: var(--line-soft); padding: 2px; }
 .seg-btn {
   flex: 1; border: 0; background: transparent; border-radius: 7px; cursor: pointer;
-  padding: 4px 6px; font-size: 11px; font-weight: 700; color: #64748b; transition: all 0.13s;
+  padding: 4px 6px; font-size: 11px; font-weight: 700; color: var(--ink-soft); transition: all 0.13s;
 }
-.seg-btn.is-active { background: #fff; color: var(--river-deep); box-shadow: var(--shadow-sm); }
-input[type='range'] { width: 100%; accent-color: var(--river); }
+.seg-btn.is-active { background: var(--surface); color: var(--accent-deep); box-shadow: var(--shadow-sm); }
+input[type='range'] { width: 100%; accent-color: var(--accent); }
 
 /* Footer ----------------------------------------------------------- */
 .studio-footer {
   flex: none; height: 24px; display: flex; align-items: center; gap: 12px;
-  padding: 0 12px; border-top: 1px solid var(--line); background: #fff;
-  font-size: 10px; color: #94a3b8; overflow: hidden; white-space: nowrap;
+  padding: 0 12px; border-top: 1px solid var(--line); background: var(--surface);
+  font-size: 10px; color: var(--ink-faint); overflow: hidden; white-space: nowrap;
 }
-.studio-footer .sep { color: #e2e8f0; }
+.studio-footer .sep { color: var(--line); }
 
 /* Modal ------------------------------------------------------------ */
 .modal {
@@ -264,15 +323,125 @@ input[type='range'] { width: 100%; accent-color: var(--river); }
 .modal.is-open { display: grid; place-items: center; }
 .modal-dialog {
   width: min(1060px, 100%); max-height: 86vh; overflow: auto; position: relative;
-  border-radius: 22px; background: #fff; padding: 28px; box-shadow: var(--shadow-lg);
+  border-radius: 22px; background: var(--surface); padding: 28px; box-shadow: var(--shadow-lg);
 }
 .modal-close {
   position: absolute; right: 18px; top: 18px; height: 34px; width: 34px; border-radius: 50%;
-  border: 1px solid var(--line); background: #fff; font-size: 19px; color: #64748b; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); font-size: 19px; color: var(--ink-soft); cursor: pointer;
 }
 .modal-close:hover { background: var(--line-soft); }
 
+/* Provider badge on a dataset row -----------------------------------
+   Which project publishes a dataset is worth noticing, not worth deciding
+   first, so it sits quietly beside the name. */
+.provider-tag {
+  display: inline-block; margin-left: 6px; padding: 1px 5px; vertical-align: 1px;
+  border-radius: 5px; font-size: 8.5px; font-weight: 800; letter-spacing: .04em;
+  text-transform: uppercase; border: 1px solid var(--line);
+  background: var(--surface-2); color: var(--ink-faint);
+}
+.provider-tag[data-provider='overture'] {
+  border-color: var(--accent-soft); background: var(--accent-wash); color: var(--accent-deep);
+}
+
+/* The mark a layer actually draws with, at row size. */
+.layer-mark {
+  display: block; height: 14px; width: 14px; flex: none;
+  border: 1px solid rgba(var(--shadow-tint), .12);
+}
+.row-ico:has(.layer-mark) { background: transparent; }
+
+/* ==================================================================
+   Responsive
+   ==================================================================
+   Three shapes, not one that squeezes:
+
+     wide     rail · left panel · canvas · right panel, all side by side
+     medium   the right panel floats over the canvas when it is needed
+     narrow   the rail moves to the bottom where a thumb is, and both
+              panels become sheets over the map — the map keeps the full
+              width, because on a small screen the map *is* the interface
+   ================================================================== */
 @media (max-width: 1100px) { :root { --panel-w: 258px; } }
+
 @media (max-width: 900px) {
   .side-panel--right { position: absolute; right: 0; top: 0; bottom: 0; box-shadow: var(--shadow-lg); }
+}
+
+@media (max-width: 760px) {
+  .studio-body { flex-direction: column-reverse; position: relative; }
+
+  /* Rail → bottom bar. Horizontal scroll beats shrinking seven targets
+     below the size of a fingertip. */
+  .tool-rail {
+    width: 100%; flex-direction: row; align-items: stretch; gap: 4px;
+    border-right: 0; border-top: 1px solid var(--line);
+    padding: 5px 6px calc(5px + env(safe-area-inset-bottom));
+    overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+  }
+  .tool-rail::-webkit-scrollbar { display: none; }
+  .rail-btn { width: auto; min-width: 62px; flex: 1 0 auto; padding: 6px 8px; }
+  .rail-ico { font-size: 15px; }
+
+  /* Panels become sheets over the map. */
+  .side-panel {
+    position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+    width: auto; border-right: 0; border-top: 1px solid var(--line);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(100%); visibility: hidden;
+    transition: transform .22s ease, visibility .22s;
+  }
+  .studio.is-panel-open .side-panel:not(.side-panel--right) { transform: translateY(0); visibility: visible; }
+
+  .side-panel--right {
+    top: auto; height: 62%; border-left: 0;
+    border-radius: 16px 16px 0 0;
+  }
+  .studio.is-inspector-open .side-panel--right { transform: translateY(0); visibility: visible; }
+
+  /* Header: two rows rather than one cramped one. */
+  .studio-header { flex-wrap: wrap; height: auto; padding: 7px 10px; gap: 7px; }
+  .studio-header > :last-child { margin-left: auto; }
+  .studio-footer { display: none; }
+  .artboard-label { font-size: 9px; }
+}
+
+@media (max-width: 420px) {
+  .rail-btn span:not(.rail-ico) { display: none; }
+  .rail-btn { min-width: 46px; }
+  .rail-ico { font-size: 18px; }
+}
+
+/* A pointer that cannot hover gets the row actions permanently, because there
+   is no hover state to reveal them — and something permanently covering the
+   end of every name is worse than a taller row. So on touch they come back
+   into the flow, on a line of their own beneath the name.
+
+   Keyed on hover rather than on width because that is the actual condition: a
+   touchscreen laptop has a wide window and no hover, and would otherwise sit
+   with six buttons parked over every name it is trying to show.
+
+   Only the actions move. The tick, the icon and the name stay on one line, so
+   the row still reads as a row; wrapping the name as well puts the icon on a
+   line beside nothing and makes every row half as tall again. */
+@media (hover: none) {
+  .row { flex-wrap: wrap; row-gap: 3px; }
+  .row-act {
+    position: static; transform: none;
+    flex: 1 0 100%; justify-content: flex-end;
+    opacity: 1; pointer-events: auto;
+    padding-left: 0; padding-top: 2px;
+    background: none; border-top: 1px solid var(--line-soft);
+  }
+  .row.is-active .row-act { background: none; }
+  .icon-btn, .rail-btn { min-height: 32px; }
+  .row-act .icon-btn { height: 30px; width: 30px; }
+}
+
+/* Motion is decoration here; the panels must arrive whether or not it plays.
+   Transitioning `visibility` means a panel that never finishes animating is a
+   panel you cannot use, so anyone who has asked for less motion gets none. */
+@media (prefers-reduced-motion: reduce) {
+  .side-panel { transition: none; }
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }

@@ -15,10 +15,7 @@
 <!-- ============================================================
      LANDING  — rendered by src/ui/landing.js
      ============================================================ -->
-<div id="landing" class="landing">
-  <nav class="home-rail" id="home-rail" aria-label="Home navigation"></nav>
-  <div class="home-main" id="home-main"></div>
-</div>
+<div id="landing" class="landing"></div>
 
 <!-- Create dialog — rendered by src/ui/create-modal.js -->
 <div id="create-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="create-title"></div>
@@ -35,7 +32,7 @@
       </button>
       <div class="min-w-0">
         <input id="project-name" class="project-name-input" value="Untitled map" aria-label="Project name" />
-        <p class="hidden text-[11px] leading-none text-slate-500 lg:block" id="project-subline">Map template · A4 Portrait</p>
+        <p class="project-subline" id="project-subline">Map template · A4 Portrait</p>
       </div>
     </div>
 
@@ -45,7 +42,7 @@
     <div class="flex shrink-0 items-center gap-1.5">
       <button id="undo-btn" class="icon-btn" title="Undo (Ctrl+Z)" aria-label="Undo">↺</button>
       <button id="redo-btn" class="icon-btn" title="Redo (Ctrl+Shift+Z)" aria-label="Redo">↻</button>
-      <span class="hidden h-5 w-px bg-slate-200 sm:block"></span>
+      <span class="header-sep"></span>
       <button id="export-png-btn" class="btn-ghost">PNG</button>
       <button id="export-pdf-btn" class="btn-primary">Export PDF</button>
     </div>
@@ -62,6 +59,7 @@
       <section class="panel-pane" data-pane="area"      id="pane-area"></section>
       <section class="panel-pane" data-pane="data"      id="pane-data"></section>
       <section class="panel-pane" data-pane="analysis"  id="pane-analysis"></section>
+      <section class="panel-pane" data-pane="ai"        id="pane-ai"></section>
       <section class="panel-pane" data-pane="elements"  id="pane-elements"></section>
       <section class="panel-pane" data-pane="layers"    id="pane-layers"></section>
     </aside>

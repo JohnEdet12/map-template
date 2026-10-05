@@ -20,8 +20,24 @@ const FURNITURE = {
   coords: () => el('span.pv-coords', { text: '7°29′E' }),
 };
 
+/**
+ * The sheet a photo-backed template was traced from. Vite rewrites this to
+ * the hashed asset URL at build time.
+ */
+export const sheetUrl = (photo) =>
+  new URL(`../assets/contributors/${photo}`, import.meta.url).href;
+
 /** The thumbnail node for a template. */
 export function templatePreview(tpl) {
+  // Templates traced from a real sheet show that sheet — a CSS mock-up would
+  // be a worse likeness of a layout we have a photograph of.
+  if (tpl.photo) {
+    return el('div.pv.pv-photo', {}, [
+      el('img', { src: sheetUrl(tpl.photo), alt: `${tpl.name} layout`, loading: 'lazy' }),
+      el('span.pv-source', { text: 'GIS dept' }),
+    ]);
+  }
+
   const node = el(`div.pv.pv-${tpl.id}`);
   for (const key of tpl.preview ?? []) {
     const make = FURNITURE[key];

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" fill="none">
+  <defs>
+    <linearGradient id="land" x1="650" y1="48" x2="1036" y2="458" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38BDF8" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#0369A1" stop-opacity=".04"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+
+  <!-- A quiet coordinate grid gives the illustration the feel of a map sheet. -->
+  <g stroke="#0284C7" stroke-opacity=".14" stroke-width="1">
+    <path d="M120 0v520M240 0v520M360 0v520M480 0v520M600 0v520M720 0v520M840 0v520M960 0v520M1080 0v520"/>
+    <path d="M0 104h1200M0 208h1200M0 312h1200M0 416h1200"/>
+  </g>
+
+  <!-- Broad land mass and nested contours. -->
+  <path d="M647 58c83-43 221-45 313 2 74 38 110 102 98 168-11 62-59 91-61 148-2 55-40 105-113 117-87 15-177-16-231-67-47-44-104-55-132-111-31-61 6-120 40-160 30-36 39-72 86-97Z" fill="url(#land)"/>
+  <g stroke="#0284C7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M647 58c83-43 221-45 313 2 74 38 110 102 98 168-11 62-59 91-61 148-2 55-40 105-113 117-87 15-177-16-231-67-47-44-104-55-132-111-31-61 6-120 40-160 30-36 39-72 86-97Z" stroke-opacity=".34" stroke-width="2"/>
+    <path d="M687 91c62-30 161-30 231 3 57 26 89 72 81 120-8 45-43 69-47 111-4 44-31 82-86 91-65 10-128-15-170-52-37-33-78-43-98-85-22-45 6-88 31-117 22-25 25-50 58-71Z" stroke-opacity=".27" stroke-width="1.5"/>
+    <path d="M723 128c45-21 112-18 159 3 41 19 64 51 57 85-5 32-31 50-33 80-3 31-22 57-59 63-46 7-89-11-118-37-27-23-57-30-71-60-16-31 3-62 21-82 15-18 20-38 44-52Z" stroke-opacity=".24" stroke-width="1.5"/>
+    <path d="M758 166c28-13 71-11 100 2 26 12 40 32 36 54-4 20-20 31-22 50-1 20-14 36-37 40-28 5-56-7-75-23-16-15-35-19-44-38-10-20 2-39 13-52 10-11 13-24 29-33Z" stroke-opacity=".22"/>
+    <path d="M787 202c16-8 40-6 57 1 14 7 23 19 21 31-2 12-12 18-13 29-1 12-8 21-21 24-17 2-32-4-43-14-10-8-20-11-25-21-6-12 1-23 7-30 5-7 8-15 17-20Z" stroke-opacity=".2"/>
+  </g>
+
+  <!-- River, road and study-area boundary. -->
+  <path d="M1108 49c-43 40-38 88-92 113-57 27-116 14-145 66-23 41 8 82-27 117-39 40-97 27-129 73-17 24-18 51-11 77" stroke="#38BDF8" stroke-opacity=".62" stroke-width="4"/>
+  <path d="M1108 49c-43 40-38 88-92 113-57 27-116 14-145 66-23 41 8 82-27 117-39 40-97 27-129 73-17 24-18 51-11 77" stroke="#E0F2FE" stroke-opacity=".7" stroke-width="1.3"/>
+  <path d="M529 391c92-30 151-106 228-117 66-10 110 31 183 3 59-22 103-73 171-76" stroke="#0369A1" stroke-opacity=".55" stroke-width="3" stroke-dasharray="2 8"/>
+  <path d="m621 141 137-59 181 52 100 127-79 143-176 41-153-89-45-122 35-93Z" stroke="#0284C7" stroke-opacity=".42" stroke-width="2" stroke-dasharray="10 7"/>
+
+  <!-- Map points and abstract label rules. -->
+  <g fill="#0284C7">
+    <circle cx="690" cy="174" r="5" fill-opacity=".7"/>
+    <circle cx="853" cy="116" r="4" fill-opacity=".55"/>
+    <circle cx="931" cy="285" r="5" fill-opacity=".7"/>
+    <circle cx="745" cy="360" r="4" fill-opacity=".55"/>
+  </g>
+  <g stroke="#0284C7" stroke-opacity=".35" stroke-width="2">
+    <path d="M702 174h68M865 116h84M943 285h75M757 360h64"/>
+  </g>
+
+  <circle cx="824" cy="246" r="72" fill="#38BDF8" fill-opacity=".08" filter="url(#soft)"/>
+</svg>

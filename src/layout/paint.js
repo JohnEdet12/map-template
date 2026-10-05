@@ -4,6 +4,8 @@
  */
 
 import { FONTS } from '../core/constants.js';
+import { drawIcon } from '../layers/icons.js';
+import { dashArray, isTransparent, swatchStroke } from '../layers/symbology.js';
 
 /** #rrggbb + alpha → rgba() */
 export function rgba(hex, alpha = 1) {
@@ -119,18 +121,51 @@ export function drawLine(ctx, text, x, y, maxWidth, opts) {
   return w;
 }
 
-/** A legend/stat swatch: filled square, line stroke or point dot. */
-export function drawSwatch(ctx, kind, x, y, size, color) {
+/**
+ * A legend/stat swatch: filled square, line stroke, point dot — or the very
+ * icon and line pattern the map is drawing, when the row carries one.
+ * @param {{icon?:string, dash?:string, width?:number}} [mark]
+ */
+export function drawSwatch(ctx, kind, x, y, size, color, mark = {}) {
+  // The printed twin of the hollow swatch in elements.js — an outline where
+  // a filled mark would be, because nothing is being drawn on the map.
+  if (isTransparent(color)) {
+    ctx.save();
+    ctx.strokeStyle = rgba(mark.inkColor ?? '#0f172a', 0.55);
+    ctx.lineWidth = Math.max(0.6, size * 0.07);
+    if (kind === 'point') {
+      ctx.beginPath();
+      ctx.arc(x + size / 2, y + size / 2, size * 0.36, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (kind === 'line') {
+      const h = Math.max(2, size * 0.5);
+      ctx.strokeRect(x, y + (size - h) / 2, size, h);
+    } else {
+      roundRect(ctx, x, y + size * 0.08, size, size * 0.84, size * 0.18);
+      ctx.stroke();
+    }
+    ctx.restore();
+    return;
+  }
+
+  if (kind === 'point' && mark.icon && drawIcon(ctx, mark.icon, x, y, size, color)) return;
+
   ctx.save();
   ctx.fillStyle = color;
   ctx.strokeStyle = color;
   if (kind === 'line') {
-    ctx.lineWidth = Math.max(1, size * 0.26);
-    ctx.lineCap = 'round';
+    const w = Math.max(1, swatchStroke(size, mark.width));
+    const pattern = dashArray(mark.dash);
+    ctx.lineWidth = w;
+    // Dash lengths are in line widths on the map; scaling them by the swatch
+    // stroke keeps the printed pattern recognisably the same rhythm.
+    ctx.setLineDash(pattern ? pattern.map((d) => d * w) : []);
+    ctx.lineCap = pattern ? 'butt' : 'round';
     ctx.beginPath();
     ctx.moveTo(x, y + size / 2);
     ctx.lineTo(x + size, y + size / 2);
     ctx.stroke();
+    ctx.setLineDash([]);
   } else if (kind === 'point') {
     ctx.beginPath();
     ctx.arc(x + size / 2, y + size / 2, size * 0.38, 0, Math.PI * 2);

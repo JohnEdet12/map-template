@@ -9,6 +9,16 @@
 .showcase-card .pv { height: 168px; }
 .tpl-card .pv { height: 100%; border-radius: 0; }
 
+/* Photo-backed thumbnails — templates traced from a real GIS dept sheet.
+   The sheet is the thumbnail, so the card shows the layout it produces. */
+.pv-photo { background: #f8fafc; }
+.pv-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+.pv-source {
+  position: absolute; z-index: 5; right: 8px; bottom: 8px; border-radius: 999px;
+  padding: 3px 8px; background: rgba(15, 23, 42, 0.82); color: #fff;
+  font-size: 8.5px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+}
+
 /* Shared map furniture ------------------------------------------- */
 .pv-label {
   position: absolute; z-index: 5; left: 10px; top: 10px; border-radius: 999px;

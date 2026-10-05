@@ -1,0 +1,119 @@
+# The geodata service.
+#
+#   docker compose up -d cache          serve the database on :8788
+#   docker compose run --rm fetch       download the Nigeria extract
+#   docker compose run --rm import --nigeria --no-heavy
+#   docker compose run --rm backup      write a portable copy to ./server/data
+#
+# The database lives on the `geodata` volume rather than in the repository or
+# the image, because it is 145 MB and rebuilt often. `./server/data` is bind
+# mounted wherever a command needs to read an extract or hand a file back.
+
+name: gis-design-studio
+
+services:
+  # The one long-running service: the studio's cache, over HTTP.
+  cache:
+    build: .
+    image: gis-geodata:latest
+    container_name: gis-geodata
+    restart: unless-stopped
+    ports:
+      - "8788:8788"
+    environment:
+      # Where the browser is served from. The dev server proxies /api/cache
+      # here, so in development this is only a fallback for direct calls.
+      ALLOW_ORIGIN: ${ALLOW_ORIGIN:-http://localhost:5173}
+      CACHE_BUDGET: ${CACHE_BUDGET:-8589934592}
+    volumes:
+      - geodata:/data
+
+  # Fetch a country extract into ./server/data. Roughly 700 MB for Nigeria;
+  # it is a build input, so it stays out of the image and out of the volume.
+  fetch:
+    build: .
+    profiles: ["tools"]
+    # Inherited from the image, where it belongs to the server. A one-shot
+    # tool serves no HTTP, so leaving it on just labels every run unhealthy.
+    healthcheck:
+      disable: true
+    volumes:
+      - ./server/data:/extracts
+    entrypoint: ["sh", "-c"]
+    command: >
+      'curl -L --fail -C - -o /extracts/${EXTRACT:-nigeria-latest}.osm.pbf
+       https://download.geofabrik.de/${EXTRACT_PATH:-africa/nigeria-latest}.osm.pbf'
+
+  # Build the database from that extract. Arguments pass straight through:
+  #   docker compose run --rm import --nigeria --no-heavy
+  import:
+    build: .
+    profiles: ["tools"]
+    # Inherited from the image, where it belongs to the server. A one-shot
+    # tool serves no HTTP, so leaving it on just labels every run unhealthy.
+    healthcheck:
+      disable: true
+    environment:
+      # Geocoded state boxes belong on the volume, not in the container's own
+      # filesystem, or every run pays for 37 Nominatim lookups again.
+      REGIONS_CACHE: /data/regions.json
+    volumes:
+      - geodata:/data
+      - ./server/data:/extracts:ro
+    # The extract is chosen by EXTRACT_FILE rather than by passing a container
+    # path on the command line. Compose substitutes it here, so it never
+    # reaches a shell — which matters on Git Bash, where an argument that
+    # looks like /extracts/... gets rewritten into a Windows path before
+    # Docker ever sees it.
+    entrypoint:
+      ["node", "--max-old-space-size=8192", "server/import-pbf.mjs",
+       "--pbf", "/extracts/${EXTRACT_FILE:-nigeria-latest.osm.pbf}"]
+
+  # Fill the database from the live APIs instead, for areas outside whatever
+  # extract you imported.
+  prefetch:
+    build: .
+    profiles: ["tools"]
+    # Inherited from the image, where it belongs to the server. A one-shot
+    # tool serves no HTTP, so leaving it on just labels every run unhealthy.
+    healthcheck:
+      disable: true
+    environment:
+      REGIONS_CACHE: /data/regions.json
+    volumes:
+      - geodata:/data
+    entrypoint: ["node", "server/prefetch.mjs"]
+
+  # Take a consistent copy out to ./server/data, ready to hand to someone else.
+  backup:
+    build: .
+    profiles: ["tools"]
+    # Inherited from the image, where it belongs to the server. A one-shot
+    # tool serves no HTTP, so leaving it on just labels every run unhealthy.
+    healthcheck:
+      disable: true
+    volumes:
+      - geodata:/data
+      - ./server/data:/out
+    entrypoint: ["node", "server/backup-db.mjs", "/out/geodata-backup.db"]
+
+  # Load a copy someone handed you. Overwrites whatever is on the volume.
+  restore:
+    build: .
+    profiles: ["tools"]
+    # Inherited from the image, where it belongs to the server. A one-shot
+    # tool serves no HTTP, so leaving it on just labels every run unhealthy.
+    healthcheck:
+      disable: true
+    volumes:
+      - geodata:/data
+      - ./server/data:/in:ro
+    entrypoint: ["sh", "-c"]
+    command: >
+      'test -f /in/geodata-backup.db || { echo "Put geodata-backup.db in ./server/data first."; exit 1; };
+       rm -f /data/geodata.db /data/geodata.db-wal /data/geodata.db-shm;
+       cp /in/geodata-backup.db /data/geodata.db;
+       echo "Restored $(du -h /data/geodata.db | cut -f1) to the geodata volume."'
+
+volumes:
+  geodata:
